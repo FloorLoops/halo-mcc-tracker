@@ -52,7 +52,7 @@
 | **v1.0** | Native app · 690-achievement database · real icons · Xbox Live sync · guide links | ✅ shipped |
 | **v1.1** | Icons fill their frame (crop-to-fit) · full UNSC rank ladder · estimated time-to-100% · per-type stats | ✅ shipped |
 | **v1.1.1** | **100 in-app achievements** (icons · animated unlock banners · sounds · app-rank) + hidden easter eggs + Halo Waypoint-inspired credit | ✅ shipped |
-| **v1.1.2** | Xbox sync no longer storms 100 unlock banners — bulk-reconciles silently with one summary | ✅ shipped |
+| **v1.1.2** | In-app roadmap · Xbox sync no longer storms 100 unlock banners · 101 achievements with how-to-unlock descriptions + a "find all secrets" meta-achievement | ✅ shipped |
 | **v1.1.x** | Exact-700 reconciliation vs TrueAchievements (dedupe the 690→700) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1; weight by type/skull-stacking/legendary, not a flat per-achievement guess) | 🔜 next |
 | **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · Halo 3 rank icons · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
 | **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |

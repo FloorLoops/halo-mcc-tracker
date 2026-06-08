@@ -471,6 +471,33 @@ public class MainActivity extends Activity {
         ex.addView(text("Database: 690 achievements / 7,110G imported from Halopedia (live icons + wiki links). Exact-700 reconciliation vs TrueAchievements: next update.",9,T3,false));
         col.addView(ex);
 
+        LinearLayout rm=card(); rm.addView(text("🗺️ ROADMAP",9.5f,T2,true));
+        String[][] RM={
+            {"1","v1.0","Native app · 690-achievement database · real icons · Xbox sync · guides"},
+            {"1","v1.1","Icons crop-to-fit · rank ladder · time-to-100% · per-type stats"},
+            {"1","v1.1.1","100 in-app achievements · animated banners · sounds · app-rank · secrets"},
+            {"1","v1.1.2","In-app roadmap · sync no longer storms banners"},
+            {"0","v1.1.x","Exact-700 reconciliation · smart weighted time-to-completion"},
+            {"0","v1.2","XP-weighted ranking overhaul · Halo 3 rank icons · smart breakdowns & focus mode"},
+            {"0","v1.2.5","Native UI glow-up (match the web version)"},
+            {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass"},
+            {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
+            {"0","v1.4","Halo SFX & animations"},
+            {"0","v1.5","Notification sound · tweaks"},
+            {"0","v1.6","Home-screen widgets"},
+            {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
+            {"0","v1.8","Walkthroughs · solution videos · screenshots"},
+            {"0","v1.9","Optimal completion-order + LASO routing"},
+        };
+        for(String[] r:RM){ boolean done=r[0].equals("1");
+            LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setPadding(0,dp(4),0,dp(4));
+            TextView dot=text(done?"✅":"◻️",12,done?GREEN:T3,false); dot.setPadding(0,0,dp(8),0); row.addView(dot);
+            LinearLayout c2=new LinearLayout(this); c2.setOrientation(LinearLayout.VERTICAL); c2.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
+            c2.addView(text(r[1],12,done?GREEN:CYAN,true));
+            c2.addView(text(r[2],10.5f,done?T3:T2,false)); row.addView(c2); rm.addView(row); }
+        rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
+        col.addView(rm);
+
         TextView ab=text("\nUNSC TERMINAL v1.1.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
@@ -561,95 +588,95 @@ public class MainActivity extends Activity {
     void metaDef(String id,String cond,String icon,String title,String desc,boolean secret){
         METAS.add(new String[]{id,cond,icon,title,desc,secret?"1":"0"}); }
     void addAllMetas(){
-        metaDef("d1","done:1","🩸","First Blood","1 achievements unlocked",false);
-        metaDef("d5","done:5","🥾","Boot Camp","5 achievements unlocked",false);
-        metaDef("d10","done:10","🔟","Double Digits","10 achievements unlocked",false);
-        metaDef("d25","done:25","📈","Making Progress","25 achievements unlocked",false);
-        metaDef("d50","done:50","🎯","Half-Centurion","50 achievements unlocked",false);
-        metaDef("d75","done:75","⛽","Three-Quarter","75 achievements unlocked",false);
-        metaDef("d100","done:100","💯","Centurion","100 achievements unlocked",false);
-        metaDef("d150","done:150","🎖️","Seasoned","150 achievements unlocked",false);
-        metaDef("d200","done:200","🪖","Veteran","200 achievements unlocked",false);
-        metaDef("d250","done:250","⚔️","Battle-Hardened","250 achievements unlocked",false);
-        metaDef("d300","done:300","🔥","Relentless","300 achievements unlocked",false);
-        metaDef("d400","done:400","🚀","Unstoppable","400 achievements unlocked",false);
-        metaDef("d450","done:450","🤖","The Machine","450 achievements unlocked",false);
-        metaDef("d500","done:500","🌟","Legend in Making","500 achievements unlocked",false);
-        metaDef("d600","done:600","🧗","Almost There","600 achievements unlocked",false);
-        metaDef("d650","done:650","🏁","Home Stretch","650 achievements unlocked",false);
-        metaDef("d690","done:690","👑","Completionist","690 achievements unlocked",false);
-        metaDef("gs250","gs:250","🪙","Pocket Change","250G earned",false);
-        metaDef("gs500","gs:500","💰","Coin Collector","500G earned",false);
-        metaDef("gs1000","gs:1000","🎮","GS Grinder","1000G earned",false);
-        metaDef("gs2000","gs:2000","🎯","Point Blank","2000G earned",false);
-        metaDef("gs3000","gs:3000","📊","Score Surge","3000G earned",false);
-        metaDef("gs4000","gs:4000","🎲","High Roller","4000G earned",false);
-        metaDef("gs5000","gs:5000","🎖️","GS General","5000G earned",false);
-        metaDef("gs6000","gs:6000","🔢","Number Cruncher","6000G earned",false);
-        metaDef("gs7000","gs:7000","🆙","Maxed Out","7000G earned",false);
-        metaDef("gs7110","gs:7110","🏆","Perfect Score","7110G earned",false);
-        metaDef("g1ce","g1:ce","🎬","First Step: CE","First achievement in CE",false);
-        metaDef("g1h2","g1:h2","🎬","First Step: Halo 2","First achievement in Halo 2",false);
-        metaDef("g1h3","g1:h3","🎬","First Step: Halo 3","First achievement in Halo 3",false);
-        metaDef("g1odst","g1:odst","🎬","First Step: ODST","First achievement in ODST",false);
-        metaDef("g1reach","g1:reach","🎬","First Step: Reach","First achievement in Reach",false);
-        metaDef("g1h4","g1:h4","🎬","First Step: Halo 4","First achievement in Halo 4",false);
-        metaDef("g1mcc","g1:mcc","🎬","First Step: MCC","First achievement in MCC",false);
-        metaDef("g100ce","g100:ce","🏅","CE Complete","100% of CE",false);
-        metaDef("g100h2","g100:h2","🏅","Halo 2 Complete","100% of Halo 2",false);
-        metaDef("g100h3","g100:h3","🏅","Halo 3 Complete","100% of Halo 3",false);
-        metaDef("g100odst","g100:odst","🏅","ODST Complete","100% of ODST",false);
-        metaDef("g100reach","g100:reach","🏅","Reach Complete","100% of Reach",false);
-        metaDef("g100h4","g100:h4","🏅","Halo 4 Complete","100% of Halo 4",false);
-        metaDef("g100mcc","g100:mcc","🏅","MCC Complete","100% of MCC",false);
-        metaDef("g50ce","g50:ce","▶️","CE Halfway","50% of CE",false);
-        metaDef("g50h2","g50:h2","▶️","Halo 2 Halfway","50% of Halo 2",false);
-        metaDef("g50h3","g50:h3","▶️","Halo 3 Halfway","50% of Halo 3",false);
-        metaDef("g50odst","g50:odst","▶️","ODST Halfway","50% of ODST",false);
-        metaDef("g50reach","g50:reach","▶️","Reach Halfway","50% of Reach",false);
-        metaDef("g50h4","g50:h4","▶️","Halo 4 Halfway","50% of Halo 4",false);
-        metaDef("g50mcc","g50:mcc","▶️","MCC Halfway","50% of MCC",false);
-        metaDef("tfstory","tf:story","📖","First Story","First Story achievement",false);
-        metaDef("tfskull","tf:skull","💀","First Skull","First Skull achievement",false);
-        metaDef("tfterminal","tf:terminal","📟","First Terminal","First Terminal achievement",false);
-        metaDef("tfspeed","tf:speed","⏱️","First Speed","First Speed achievement",false);
-        metaDef("tflegendary","tf:legendary","🔴","First Legendary","First Legendary achievement",false);
-        metaDef("tflaso","tf:laso","☠️","First LASO","First LASO achievement",false);
-        metaDef("tfmultiplayer","tf:multiplayer","🎮","First Multiplayer","First Multiplayer achievement",false);
-        metaDef("tffirefight","tf:firefight","🔫","First Firefight","First Firefight achievement",false);
-        metaDef("tfspartan_ops","tf:spartan_ops","🛰️","First Spartan Ops","First Spartan Ops achievement",false);
-        metaDef("tfcollectible","tf:collectible","🧩","First Collectible","First Collectible achievement",false);
-        metaDef("tastory","ta:story","📖","Story Master","All Story achievements",false);
-        metaDef("taskull","ta:skull","💀","Skull Master","All Skull achievements",false);
-        metaDef("taterminal","ta:terminal","📟","Terminal Master","All Terminal achievements",false);
-        metaDef("taspeed","ta:speed","⏱️","Speed Master","All Speed achievements",false);
-        metaDef("talegendary","ta:legendary","🔴","Legendary Master","All Legendary achievements",false);
-        metaDef("talaso","ta:laso","☠️","LASO Master","All LASO achievements",false);
-        metaDef("tamultiplayer","ta:multiplayer","🎮","Multiplayer Master","All Multiplayer achievements",false);
-        metaDef("tafirefight","ta:firefight","🔫","Firefight Master","All Firefight achievements",false);
-        metaDef("taspartan_ops","ta:spartan_ops","🛰️","Spartan Ops Master","All Spartan Ops achievements",false);
-        metaDef("tacollectible","ta:collectible","🧩","Collectible Master","All Collectible achievements",false);
-        metaDef("rk0","rank:0","🟫","Rank: Recruit","Reach 0%",false);
-        metaDef("rk10","rank:10","🔵","Rank: Private","Reach 10%",false);
-        metaDef("rk25","rank:25","🟡","Rank: Corporal","Reach 25%",false);
-        metaDef("rk40","rank:40","🟠","Rank: Sergeant","Reach 40%",false);
-        metaDef("rk55","rank:55","🔴","Rank: Staff Sergeant","Reach 55%",false);
-        metaDef("rk65","rank:65","🟣","Rank: Lieutenant","Reach 65%",false);
-        metaDef("rk75","rank:75","⚫","Rank: Captain","Reach 75%",false);
-        metaDef("rk85","rank:85","🪖","Rank: ODST Operative","Reach 85%",false);
-        metaDef("rk93","rank:93","🟢","Rank: Spartan","Reach 93%",false);
-        metaDef("rk99","rank:99","🌟","Rank: Noble Spartan","Reach 99%",false);
-        metaDef("rk100","rank:100","🎖️","Rank: Master Chief","Reach 100%",false);
-        metaDef("pin1","pins:1","📌","Pin It","Pin an achievement",false);
-        metaDef("pin5","pins:5","📌","Target List","Pin 5",false);
-        metaDef("pin10","pins:10","📌","Hit List","Pin 10",false);
-        metaDef("pin25","pins:25","📌","Master Strategist","Pin 25",false);
-        metaDef("ses10","sess:10","⏱️","Warming Up","10-min session",false);
-        metaDef("ses30","sess:30","🎯","In the Zone","30-min session",false);
-        metaDef("ses60","sess:60","🏃","Marathon Session","60-min session",false);
-        metaDef("ftsync","feat:sync","⚡","Linked Up","Sync with Xbox Live",false);
-        metaDef("ftback","feat:backup","💾","Safe Keeping","Back up progress",false);
-        metaDef("ftsearch","feat:search","🔎","Detective","Use search",false);
+        metaDef("d1","done:1","🩸","First Blood","Unlock any 1 MCC achievements",false);
+        metaDef("d5","done:5","🥾","Boot Camp","Unlock any 5 MCC achievements",false);
+        metaDef("d10","done:10","🔟","Double Digits","Unlock any 10 MCC achievements",false);
+        metaDef("d25","done:25","📈","Making Progress","Unlock any 25 MCC achievements",false);
+        metaDef("d50","done:50","🎯","Half-Centurion","Unlock any 50 MCC achievements",false);
+        metaDef("d75","done:75","⛽","Three-Quarter","Unlock any 75 MCC achievements",false);
+        metaDef("d100","done:100","💯","Centurion","Unlock any 100 MCC achievements",false);
+        metaDef("d150","done:150","🎖️","Seasoned","Unlock any 150 MCC achievements",false);
+        metaDef("d200","done:200","🪖","Veteran","Unlock any 200 MCC achievements",false);
+        metaDef("d250","done:250","⚔️","Battle-Hardened","Unlock any 250 MCC achievements",false);
+        metaDef("d300","done:300","🔥","Relentless","Unlock any 300 MCC achievements",false);
+        metaDef("d400","done:400","🚀","Unstoppable","Unlock any 400 MCC achievements",false);
+        metaDef("d450","done:450","🤖","The Machine","Unlock any 450 MCC achievements",false);
+        metaDef("d500","done:500","🌟","Legend in Making","Unlock any 500 MCC achievements",false);
+        metaDef("d600","done:600","🧗","Almost There","Unlock any 600 MCC achievements",false);
+        metaDef("d650","done:650","🏁","Home Stretch","Unlock any 650 MCC achievements",false);
+        metaDef("d690","done:690","👑","Completionist","Unlock any 690 MCC achievements",false);
+        metaDef("gs250","gs:250","🪙","Pocket Change","Earn 250G of Gamerscore",false);
+        metaDef("gs500","gs:500","💰","Coin Collector","Earn 500G of Gamerscore",false);
+        metaDef("gs1000","gs:1000","🎮","GS Grinder","Earn 1000G of Gamerscore",false);
+        metaDef("gs2000","gs:2000","🎯","Point Blank","Earn 2000G of Gamerscore",false);
+        metaDef("gs3000","gs:3000","📊","Score Surge","Earn 3000G of Gamerscore",false);
+        metaDef("gs4000","gs:4000","🎲","High Roller","Earn 4000G of Gamerscore",false);
+        metaDef("gs5000","gs:5000","🎖️","GS General","Earn 5000G of Gamerscore",false);
+        metaDef("gs6000","gs:6000","🔢","Number Cruncher","Earn 6000G of Gamerscore",false);
+        metaDef("gs7000","gs:7000","🆙","Maxed Out","Earn 7000G of Gamerscore",false);
+        metaDef("gs7110","gs:7110","🏆","Perfect Score","Earn 7110G of Gamerscore",false);
+        metaDef("g1ce","g1:ce","🎬","First Step: CE Anniversary","Unlock your first CE Anniversary achievement",false);
+        metaDef("g1h2","g1:h2","🎬","First Step: Halo 2","Unlock your first Halo 2 achievement",false);
+        metaDef("g1h3","g1:h3","🎬","First Step: Halo 3","Unlock your first Halo 3 achievement",false);
+        metaDef("g1odst","g1:odst","🎬","First Step: ODST","Unlock your first ODST achievement",false);
+        metaDef("g1reach","g1:reach","🎬","First Step: Reach","Unlock your first Reach achievement",false);
+        metaDef("g1h4","g1:h4","🎬","First Step: Halo 4","Unlock your first Halo 4 achievement",false);
+        metaDef("g1mcc","g1:mcc","🎬","First Step: cross-game","Unlock your first cross-game achievement",false);
+        metaDef("g100ce","g100:ce","🏅","CE Anniversary Complete","100% every CE Anniversary achievement",false);
+        metaDef("g100h2","g100:h2","🏅","Halo 2 Complete","100% every Halo 2 achievement",false);
+        metaDef("g100h3","g100:h3","🏅","Halo 3 Complete","100% every Halo 3 achievement",false);
+        metaDef("g100odst","g100:odst","🏅","ODST Complete","100% every ODST achievement",false);
+        metaDef("g100reach","g100:reach","🏅","Reach Complete","100% every Reach achievement",false);
+        metaDef("g100h4","g100:h4","🏅","Halo 4 Complete","100% every Halo 4 achievement",false);
+        metaDef("g100mcc","g100:mcc","🏅","cross-game Complete","100% every cross-game achievement",false);
+        metaDef("g50ce","g50:ce","▶️","CE Anniversary Halfway","Reach 50% in CE Anniversary",false);
+        metaDef("g50h2","g50:h2","▶️","Halo 2 Halfway","Reach 50% in Halo 2",false);
+        metaDef("g50h3","g50:h3","▶️","Halo 3 Halfway","Reach 50% in Halo 3",false);
+        metaDef("g50odst","g50:odst","▶️","ODST Halfway","Reach 50% in ODST",false);
+        metaDef("g50reach","g50:reach","▶️","Reach Halfway","Reach 50% in Reach",false);
+        metaDef("g50h4","g50:h4","▶️","Halo 4 Halfway","Reach 50% in Halo 4",false);
+        metaDef("g50mcc","g50:mcc","▶️","cross-game Halfway","Reach 50% in cross-game",false);
+        metaDef("tfstory","tf:story","📖","First Story","Unlock any Story achievement — beat campaign missions",false);
+        metaDef("tfskull","tf:skull","💀","First Skull","Unlock any Skull achievement — find/use every skull",false);
+        metaDef("tfterminal","tf:terminal","📟","First Terminal","Unlock any Terminal achievement — find every terminal",false);
+        metaDef("tfspeed","tf:speed","⏱️","First Speed","Unlock any Speed achievement — beat par-time challenges",false);
+        metaDef("tflegendary","tf:legendary","🔴","First Legendary","Unlock any Legendary achievement — beat missions on legendary",false);
+        metaDef("tflaso","tf:laso","☠️","First LASO","Unlock any LASO achievement — legendary all skulls on — the hardest grind",false);
+        metaDef("tfmultiplayer","tf:multiplayer","🎮","First Multiplayer","Unlock any Multiplayer achievement — win multiplayer challenges",false);
+        metaDef("tffirefight","tf:firefight","🔫","First Firefight","Unlock any Firefight achievement — survive firefight",false);
+        metaDef("tfspartan_ops","tf:spartan_ops","🛰️","First Spartan Ops","Unlock any Spartan Ops achievement — clear spartan ops",false);
+        metaDef("tfcollectible","tf:collectible","🧩","First Collectible","Unlock any Collectible achievement — grab every collectible",false);
+        metaDef("tastory","ta:story","📖","Story Master","Unlock EVERY Story achievement (beat campaign missions)",false);
+        metaDef("taskull","ta:skull","💀","Skull Master","Unlock EVERY Skull achievement (find/use every skull)",false);
+        metaDef("taterminal","ta:terminal","📟","Terminal Master","Unlock EVERY Terminal achievement (find every terminal)",false);
+        metaDef("taspeed","ta:speed","⏱️","Speed Master","Unlock EVERY Speed achievement (beat par-time challenges)",false);
+        metaDef("talegendary","ta:legendary","🔴","Legendary Master","Unlock EVERY Legendary achievement (beat missions on legendary)",false);
+        metaDef("talaso","ta:laso","☠️","LASO Master","Unlock EVERY LASO achievement (legendary all skulls on — the hardest grind)",false);
+        metaDef("tamultiplayer","ta:multiplayer","🎮","Multiplayer Master","Unlock EVERY Multiplayer achievement (win multiplayer challenges)",false);
+        metaDef("tafirefight","ta:firefight","🔫","Firefight Master","Unlock EVERY Firefight achievement (survive firefight)",false);
+        metaDef("taspartan_ops","ta:spartan_ops","🛰️","Spartan Ops Master","Unlock EVERY Spartan Ops achievement (clear spartan ops)",false);
+        metaDef("tacollectible","ta:collectible","🧩","Collectible Master","Unlock EVERY Collectible achievement (grab every collectible)",false);
+        metaDef("rk0","rank:0","🟫","Rank: Recruit","Reach 0% overall completion",false);
+        metaDef("rk10","rank:10","🔵","Rank: Private","Reach 10% overall completion",false);
+        metaDef("rk25","rank:25","🟡","Rank: Corporal","Reach 25% overall completion",false);
+        metaDef("rk40","rank:40","🟠","Rank: Sergeant","Reach 40% overall completion",false);
+        metaDef("rk55","rank:55","🔴","Rank: Staff Sergeant","Reach 55% overall completion",false);
+        metaDef("rk65","rank:65","🟣","Rank: Lieutenant","Reach 65% overall completion",false);
+        metaDef("rk75","rank:75","⚫","Rank: Captain","Reach 75% overall completion",false);
+        metaDef("rk85","rank:85","🪖","Rank: ODST Operative","Reach 85% overall completion",false);
+        metaDef("rk93","rank:93","🟢","Rank: Spartan","Reach 93% overall completion",false);
+        metaDef("rk99","rank:99","🌟","Rank: Noble Spartan","Reach 99% overall completion",false);
+        metaDef("rk100","rank:100","🎖️","Rank: Master Chief","Reach 100% overall completion",false);
+        metaDef("pin1","pins:1","📌","Pin It","Pin any achievement (long-press → PIN)",false);
+        metaDef("pin5","pins:5","📌","Target List","Pin 5 achievements at once",false);
+        metaDef("pin10","pins:10","📌","Hit List","Pin 10 achievements",false);
+        metaDef("pin25","pins:25","📌","Master Strategist","Pin 25 achievements",false);
+        metaDef("ses10","sess:10","⏱️","Warming Up","Keep a session timer running 10 minutes",false);
+        metaDef("ses30","sess:30","🎯","In the Zone","Keep a session timer running 30 minutes",false);
+        metaDef("ses60","sess:60","🏃","Marathon Session","Keep a session timer running 60 minutes",false);
+        metaDef("ftsync","feat:sync","⚡","Linked Up","Sync with Xbox Live (paste an OpenXBL key)",false);
+        metaDef("ftback","feat:backup","💾","Safe Keeping","Copy a progress backup",false);
+        metaDef("ftsearch","feat:search","🔎","Detective","Use the achievement search",false);
         metaDef("egg_cryo","egg","❄️","Wake Me When You Need Me","???",true);
         metaDef("egg_easy","egg","🗡️","Were It So Easy","???",true);
         metaDef("egg_grunt","egg","🎉","Grunt Birthday Party","???",true);
@@ -661,6 +688,7 @@ public class MainActivity extends Activity {
         metaDef("egg_343","egg","💡","343 Guilty Spark","???",true);
         metaDef("egg_bloom","egg","🌸","Bloom","???",true);
         metaDef("egg_parliament","egg","🦉","A Parliament of Four","???",true);
+        metaDef("meta_allsecrets","allsecrets","🔓","Conspiracy Theorist","Discover all 11 hidden easter eggs scattered through the app",false);
     }
     String[] metaById(String id){ for(String[] m:METAS) if(m[0].equals(id)) return m; return null; }
     int gsDone(){ int g=0; for(JSONObject o:all) if(done.contains(o.optString("id"))) g+=o.optInt("gs"); return g; }
@@ -696,7 +724,7 @@ public class MainActivity extends Activity {
         boolean egg = m[1].equals("egg");
         playUnlock(egg); buzz();
         showAchievementBanner(m[2],m[3],egg);
-        if(egg){ flash(); if(allEggsFound()) megaCelebration(); }
+        if(egg){ flash(); if(allEggsFound()){ megaCelebration(); unlockMeta("meta_allsecrets"); } }
     }
     static final String[] EGG_IDS={"egg_cryo","egg_easy","egg_grunt","egg_iwhbyd","egg_marathon","egg_endure","egg_library","egg_madrigal","egg_343","egg_bloom","egg_parliament"};
     boolean allEggsFound(){ for(String e:EGG_IDS) if(!metas.contains(e)) return false; return true; }
