@@ -523,7 +523,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1.5 · native (final pre-v1.2)\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1.6 · native (final pre-v1.2)\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -570,48 +570,81 @@ public class MainActivity extends Activity {
         if (key.length() == 0) { Toast.makeText(this, "save an OpenXBL key first (xbl.io)", Toast.LENGTH_SHORT).show(); return; }
         Toast.makeText(this, "⚡ syncing with Xbox Live…", Toast.LENGTH_SHORT).show();
         POOL.execute(new Runnable() { public void run() {
-            int matched = 0; String err = null;
+            int matched = 0; String err = null; String gt = null;
             try {
-                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL("https://xbl.io/api/v2/achievements/title/717072975").openConnection();
-                c.setConnectTimeout(10000); c.setReadTimeout(20000);
-                c.setRequestProperty("X-Authorization", key);
-                c.setRequestProperty("Accept", "application/json");
-                java.io.InputStream in = c.getResponseCode() < 400 ? c.getInputStream() : c.getErrorStream();
-                ByteArrayOutputStream bo = new ByteArrayOutputStream(); byte[] b = new byte[8192]; int r;
-                while ((r = in.read(b)) > 0) bo.write(b, 0, r); in.close();
-                if (c.getResponseCode() >= 400) { err = "HTTP " + c.getResponseCode(); }
+                // 1) verify key + get gamertag
+                String[] acc = apiGet("https://xbl.io/api/v2/account", key);
+                if (!acc[0].equals("200")) { err = "key rejected (HTTP " + acc[0] + "). Check the OpenXBL key at xbl.io."; }
                 else {
-                    JSONObject root = new JSONObject(new String(bo.toByteArray(), StandardCharsets.UTF_8));
-                    JSONArray arr = root.optJSONArray("achievements");
-                    if (arr == null) err = "no achievements in response — key OK?";
+                    java.util.regex.Matcher gm = java.util.regex.Pattern.compile("\"gamertag\"\\s*:\\s*\"([^\"]+)\"").matcher(acc[1]);
+                    if (gm.find()) gt = gm.group(1);
+                    // 2) find MCC titleId from title history
+                    String titleId = null;
+                    String[] th = apiGet("https://xbl.io/api/v2/player/titleHistory", key);
+                    if (th[0].equals("200")) {
+                        try {
+                            JSONObject root = new JSONObject(th[1]);
+                            JSONArray titles = root.optJSONArray("titles");
+                            if (titles != null) for (int i = 0; i < titles.length(); i++) {
+                                JSONObject t = titles.getJSONObject(i);
+                                String nm = t.optString("name","").toLowerCase();
+                                if (nm.contains("master chief")) { titleId = t.optString("titleId"); break; }
+                            }
+                        } catch (Exception e) {}
+                    }
+                    if (titleId == null) titleId = "1144039928"; // fallback MCC id
+                    // 3) fetch achievements for that title
+                    String[] ar = apiGet("https://xbl.io/api/v2/achievements/title/" + titleId, key);
+                    if (!ar[0].equals("200")) { err = "couldn't load MCC achievements (HTTP " + ar[0] + "). Play MCC once on this account, then retry."; }
                     else {
-                        java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
-                        for (JSONObject o : all) byName.put(o.optString("name").trim().toLowerCase(), o.optString("id"));
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject a = arr.getJSONObject(i);
-                            String st = a.optString("progressState");
-                            if (!"Achieved".equalsIgnoreCase(st)) continue;
-                            String id = byName.get(a.optString("name").trim().toLowerCase());
-                            if (id != null) {
-                                String tu = a.optString("timeUnlocked","");
-                                if (tu.length()==0) { JSONObject pg=a.optJSONObject("progression"); if(pg!=null) tu=pg.optString("timeUnlocked",""); }
-                                if (tu.length()>0) unlockTimes.put(id, tu);
-                                if (!done.contains(id)) { done.add(id); matched++; }
+                        JSONObject root = new JSONObject(ar[1]);
+                        JSONArray arr = root.optJSONArray("achievements");
+                        if (arr == null) arr = root.optJSONArray("titleAchievements");
+                        if (arr == null) { err = "no achievements returned — body: " + ar[1].substring(0, Math.min(140, ar[1].length())); }
+                        else {
+                            java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
+                            for (JSONObject o : all) byName.put(o.optString("name").trim().toLowerCase(), o.optString("id"));
+                            for (int i = 0; i < arr.length(); i++) {
+                                JSONObject a = arr.getJSONObject(i);
+                                String st = a.optString("progressState");
+                                boolean got = "Achieved".equalsIgnoreCase(st) || a.optInt("unlocked",0)==1 || a.optBoolean("isUnlocked",false);
+                                if (!got) continue;
+                                String id = byName.get(a.optString("name").trim().toLowerCase());
+                                if (id != null) {
+                                    String tu = a.optString("timeUnlocked","");
+                                    if (tu.length()==0) { JSONObject pg=a.optJSONObject("progression"); if(pg!=null) tu=pg.optString("timeUnlocked",""); }
+                                    if (tu.length()>0) unlockTimes.put(id, tu);
+                                    if (!done.contains(id)) { done.add(id); matched++; }
+                                }
                             }
                         }
                     }
                 }
-            } catch (Exception e) { err = String.valueOf(e); }
-            final int fm = matched; final String fe = err;
+            } catch (Exception e) { err = "error: " + e; }
+            final int fm = matched; final String fe = err; final String fgt = gt;
             runOnUiThread(new Runnable() { public void run() {
-                if (fe != null) { Toast.makeText(MainActivity.this, "sync failed: " + fe, Toast.LENGTH_LONG).show(); return; }
+                if (fe != null) { new AlertDialog.Builder(MainActivity.this).setTitle("Sync failed").setMessage(fe + (fgt!=null?"\n\n(key works — signed in as "+fgt+")":"")).setPositiveButton("OK",null).show(); return; }
                 try{ JSONObject ut=new JSONObject(); for(java.util.Map.Entry<String,String> e:unlockTimes.entrySet()) ut.put(e.getKey(),e.getValue()); prefs.edit().putString("ut",ut.toString()).apply(); }catch(Exception e){}
                 bulkUnlock=true; saveSet(done, "done");
                 int beforeM=metas.size(); unlockMeta("ftsync"); checkMetas(); bulkUnlock=false;
                 int gainedM=metas.size()-beforeM;
-                Toast.makeText(MainActivity.this, "✔ Xbox sync: +" + fm + " achievements · +" + gainedM + " app achievements (silent)", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "✔ "+(fgt!=null?fgt+": ":"")+"+" + fm + " synced · +" + gainedM + " app achievements", Toast.LENGTH_LONG).show();
                 show(tab); } });
         } });
+    }
+    String[] apiGet(String url, String key) {
+        try {
+            java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            c.setConnectTimeout(10000); c.setReadTimeout(20000);
+            c.setRequestProperty("X-Authorization", key);
+            c.setRequestProperty("Accept", "application/json");
+            int code = c.getResponseCode();
+            java.io.InputStream in = code < 400 ? c.getInputStream() : c.getErrorStream();
+            ByteArrayOutputStream bo = new ByteArrayOutputStream(); byte[] b = new byte[8192]; int r;
+            if (in != null) while ((r = in.read(b)) > 0) bo.write(b, 0, r);
+            if (in != null) in.close();
+            return new String[]{ String.valueOf(code), new String(bo.toByteArray(), StandardCharsets.UTF_8) };
+        } catch (Exception e) { return new String[]{ "0", "exception: " + e }; }
     }
 
 

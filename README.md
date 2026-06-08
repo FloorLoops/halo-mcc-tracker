@@ -27,13 +27,13 @@
 
 ## ✨ Features
 
-- 🗂️ **690 achievements / 7,110G** across CE Anniversary, Halo 2 + H2A MP, Halo 3, ODST, Reach, Halo 4, and MCC General
+- 🗂️ **~690 achievement database** across CE Anniversary, Halo 2 + H2A MP, Halo 3, ODST, Reach, Halo 4, and MCC General *(Halopedia-sourced; exact reconciliation to the official 700 / 7,000G is on the roadmap)*
 - 🖼️ **Real achievement art** — official icons load live with disk caching; locked = greyscale, unlocked = full color
-- ⚡ **Xbox Live sync** — paste a free [OpenXBL](https://xbl.io) key → SYNC NOW pulls your true unlock state
+- ⚡ **Xbox Live sync** — paste a free [OpenXBL](https://xbl.io) key → SYNC NOW pulls your true unlock state + unlock dates
 - 📖 **GUIDES button on every achievement** — jump to its Halopedia page, TrueAchievements guide, or YouTube solutions
 - 🎖️ **UNSC rank ladder** — Recruit → Master Chief as your completion climbs
 - 📌 **Pins** · 🔎 **search** · 🏷️ **type filters** (story / skull / terminal / speed / LASO / legendary…) · ✅ ALL/TODO/DONE
-- 🏆 **100 in-app achievements** with animated unlock banners, sounds, and an app-rank that climbs as you earn them — plus hidden secrets to discover
+- 🏆 **100+ in-app achievements** with animated unlock banners, sounds, replay, and an app-rank that climbs as you earn them — plus hidden secrets to discover
 - ⏱️ **Session timer** with check-off counter
 - 💾 **Offline-first** — progress stored locally, one-tap clipboard backup, zero accounts, zero telemetry
 
@@ -41,7 +41,7 @@
 
 | Channel | What you get |
 |---|---|
-| [**Releases**](../../releases) | `UNSCTerminal-v1.1.5.apk` — native Android app (sideload) |
+| [**Releases**](../../releases) | `UNSCTerminal-v1.1.6.apk` — native Android app (sideload) |
 | [**Web**](https://floorloops.github.io/halo-mcc-tracker/) | Browser version — desktop-friendly, same database lineage |
 | `src/` | Full source — single-file Java, zero dependencies, no-Gradle build |
 
@@ -56,8 +56,9 @@
 | **v1.1.3** | "What's New" update-review screen (new content reconciles silently, then a single summary) · Grunt API key field (get ahead of v1.3 career stats) | ✅ shipped |
 | **v1.1.4** | Achievement list shows each one's unlock requirement (not just "locked") · **unlock date/time captured from Xbox sync** (shown in achievement details) | ✅ shipped |
 | **v1.1.5** | Tap any unlocked achievement to **replay its unlock animation/toast** — final polish before the v1.2 overhaul | ✅ shipped |
-| **v1.1.x** | Exact-700 reconciliation vs TrueAchievements (dedupe the 690→700) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1; weight by type/skull-stacking/legendary, not a flat per-achievement guess) | 🔜 next |
-| **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · Halo 3 rank icons · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
+| **v1.1.6** | Robust Xbox Live sync — verifies key, finds MCC dynamically, clear per-step error messages | ✅ shipped |
+| **v1.1.x** | Exact-700 reconciliation to the official Xbox list (the easiest path: let Xbox sync add any achievements the local DB is missing) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1; weight by type/skull-stacking/legendary, not a flat per-achievement guess) | 🔜 next |
+| **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · **choose your rank style: Halo 3 / Halo: Reach / modern MCC** · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
 | **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |
 | **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass | planned |
 | **v1.3.5** | **Achievement artwork viewer** — tap to view the full high-res achievement art (requires scraping + bundling HQ image sets) | planned |

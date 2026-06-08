@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="four.parliament.halotracker" android:versionCode="12" android:versionName="1.1.5">
+    package="four.parliament.halotracker" android:versionCode="13" android:versionName="1.1.6">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.INTERNET"/>
