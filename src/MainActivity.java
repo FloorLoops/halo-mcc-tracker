@@ -413,7 +413,7 @@ public class MainActivity extends Activity {
         ex.addView(text("Database: 690 achievements / 7,110G imported from Halopedia (live icons + wiki links). Exact-700 reconciliation vs TrueAchievements: next update.",9,T3,false));
         col.addView(ex);
 
-        TextView ab=text("\nUNSC TERMINAL v2.0 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }

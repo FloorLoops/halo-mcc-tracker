@@ -30,8 +30,8 @@
 - ⚡ **Xbox Live sync** — paste a free [OpenXBL](https://xbl.io) key → SYNC NOW pulls your true unlock state
 - 📖 **GUIDES button on every achievement** — jump to its Halopedia page, TrueAchievements guide, or YouTube solutions
 - 🎖️ **UNSC rank ladder** — Recruit → Master Chief as your completion climbs
-- 📌 **Pins** · 🔎 **search** · 🏷️ **11 type filters** (story / skull / terminal / speed / LASO / legendary…) · ✅ ALL/TODO/DONE
-- ⏱️ **Session timer** with check-off counter — structure the grind
+- 📌 **Pins** · 🔎 **search** · 🏷️ **type filters** (story / skull / terminal / speed / LASO / legendary…) · ✅ ALL/TODO/DONE
+- ⏱️ **Session timer** with check-off counter
 - 💾 **Offline-first** — progress stored locally, one-tap clipboard backup, zero accounts, zero telemetry
 
 ## 📦 Get it
@@ -47,9 +47,31 @@
 | Phase | Focus | Status |
 |---|---|---|
 | **v1.0** | Native app · 690-achievement database · real icons · Xbox Live sync · guide links | ✅ shipped |
-| **v1.1** | Icons fill their frame (crop-to-fit) · full UNSC rank ladder view · **estimated time-to-100%** · richer stats (per-type breakdown) | ✅ shipped |
+| **v1.1** | Icons fill their frame (crop-to-fit) · full UNSC rank ladder · estimated time-to-100% · per-type stats | ✅ shipped |
 | **v1.1.x** | Exact-700 reconciliation vs TrueAchievements (dedupe the 690→700) | 🔜 next |
-| **v1.2** | Per-game Halo icons · game-asset backgrounds + overall design pass | planned |
-| **v1.3** | Halo SFX (mutable) · animations & transitions | planned |
-| **v1.4** | Packaged notification sound · minor tweaks | planned |
-| **v1.5** | Home-screen widgets · ranking system overhaul with **Halo 3 rank icons** | pl
+| **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · Halo 3 rank icons · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
+| **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass | planned |
+| **v1.3.1** | Optimization & tweaks — full review pass, fix small issues + anything that slipped through | planned |
+| **v1.4** | Halo SFX (mutable) · animations & transitions | planned |
+| **v1.5** | Packaged notification sound · minor tweaks | planned |
+| **v1.6** | Home-screen widgets | planned |
+| **v1.7** | General tips & pointers blended from YouTube / Halopedia / TrueAchievements | planned |
+| **v1.8** | Per-achievement written walkthroughs · solution videos · path/collectible screenshots | planned |
+| **v1.9** | Optimal completion-order engine + least-pain LASO routing | planned |
+| **v2.0** | Generic **"100% Checklist"** edition for Google Play (original branding & assets) | planned |
+
+## 🏗️ Building
+
+No Gradle, no Android Studio: `aapt2 → ecj → d8 → zipalign → apksigner`. The entire app is one Java file + one JSON database.
+
+## ⚖️ Disclaimer
+
+Unofficial fan-made tool, free, for personal use. *Halo* and *The Master Chief Collection* are trademarks of Microsoft Corporation / Halo Studios (343 Industries); achievement names, descriptions, and artwork remain Microsoft's property (icons served from [Halopedia](https://www.halopedia.org)'s gallery). This project is not affiliated with or endorsed by Microsoft. Any commercially distributed version will use original generic branding and assets only.
+
+## 📜 License
+
+Code © 2026 Parliament Four. All rights reserved.
+
+---
+
+<div align="center"><i>"Were it so easy."</i></div>
