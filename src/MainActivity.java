@@ -147,7 +147,19 @@ public class MainActivity extends Activity {
         rcol.addView(text("RANK",9,T3,true));
         rcol.addView(text(rk[1],19,CYAN,true));
         rcol.addView(text("▸ "+rk[3],10.5f,T2,false));
-        rrow.addView(rcol); rc.addView(rrow); col.addView(rc);
+        rrow.addView(rcol);
+        TextView ladderHint=text("▸",20,T3,true); rrow.addView(ladderHint);
+        rc.addView(rrow);
+        rc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ showRankLadder(); } });
+        col.addView(rc);
+        // time-to-100
+        LinearLayout tc=card();
+        tc.addView(text("⏳ ESTIMATED TIME TO 100%",9.5f,T2,true));
+        double[] est=timeLeft();
+        tc.addView(text(fmtHours(est[0])+" remaining",20,GOLD,true));
+        tc.addView(text(fmtHours(est[1])+" total campaign · "+fmtHours(est[1]-est[0])+" done",10.5f,T2,false));
+        tc.addView(text("rough estimate from per-achievement time tags (where known)",8.5f,T3,false));
+        col.addView(tc);
 
         LinearLayout oc=card();
         oc.addView(text("CAMPAIGN PROGRESS",9.5f,T2,true));
@@ -172,6 +184,34 @@ public class MainActivity extends Activity {
             col.addView(gc); }
         TextView foot=text("\n◇ FOR PERSONAL GLORY ◇",9.5f,T3,false); foot.setGravity(Gravity.CENTER); col.addView(foot);
         return sv;
+    }
+
+    double parseHrs(String t){ if(t==null) return 0; t=t.trim().toLowerCase();
+        try{ if(t.endsWith("h")) return Double.parseDouble(t.substring(0,t.length()-1));
+            if(t.endsWith("m")) return Double.parseDouble(t.substring(0,t.length()-1))/60.0;
+            if(t.contains("h")) return Double.parseDouble(t.substring(0,t.indexOf("h")));
+        }catch(Exception e){} return 0; }
+    double[] timeLeft(){ double rem=0,tot=0;
+        for(JSONObject o:all){ double h=parseHrs(o.optString("time","")); if(h<=0) h=0.4;
+            tot+=h; if(!done.contains(o.optString("id"))) rem+=h; }
+        return new double[]{rem,tot}; }
+    String fmtHours(double h){ if(h>=1) return (h>=10?Math.round(h):Math.round(h*10)/10.0)+"h"; return Math.round(h*60)+"m"; }
+
+    void showRankLadder(){
+        ScrollView sv=new ScrollView(this); LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
+        col.setPadding(dp(8),dp(4),dp(8),dp(8)); sv.addView(col);
+        int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0];
+        col.addView(text("UNSC RANK LADDER · you're at "+pct+"%",11,CYAN,true));
+        for(String[] r:RANKS){ int rp=Integer.parseInt(r[0]); boolean reached=pct>=rp; boolean curr=r==rank(pct);
+            LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setBackground(box(curr?CARD2:CARD, curr?CYAN:LINE, 6)); row.setPadding(dp(12),dp(10),dp(12),dp(10));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.topMargin=dp(6); row.setLayoutParams(lp);
+            TextView ic=text(r[2],22,reached?T1:T3,false); ic.setPadding(0,0,dp(12),0); row.addView(ic);
+            LinearLayout c2=new LinearLayout(this); c2.setOrientation(LinearLayout.VERTICAL); c2.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
+            c2.addView(text(r[1],14,reached?(curr?CYAN:GREEN):T2,curr));
+            c2.addView(text("unlocks at "+rp+"%",9.5f,T3,false)); row.addView(c2);
+            row.addView(text(reached?"✔":"",15,GREEN,true)); col.addView(row); }
+        new AlertDialog.Builder(this).setView(sv).setPositiveButton("CLOSE",null).show();
     }
 
     /* ===== GAMES ===== */
@@ -340,7 +380,16 @@ public class MainActivity extends Activity {
         stc.addView(text("gamerscore  "+t[3]+" / "+t[2]+" G",12.5f,GOLD,false));
         stc.addView(text("pinned  "+pins.size()+"   ·   missables left  "+countFlag("missable"),12.5f,T1,false));
         stc.addView(text("LASO left  "+countType("laso")+"   ·   skulls left  "+countType("skull"),12.5f,PURPLE,false));
+        double[] est2=timeLeft(); stc.addView(text("est. time to 100%  "+fmtHours(est2[0]),12.5f,GOLD,false));
         col.addView(stc);
+        LinearLayout tyc=card(); tyc.addView(text("📂 BY TYPE (left to do)",9.5f,T2,true));
+        String[] tys={"story","skull","terminal","speed","legendary","laso","multiplayer","firefight","spartan_ops","collectible"};
+        for(String ty:tys){ int left=countType(ty); int tot=0; for(JSONObject o:all) if(ty.equals(o.optString("type"))) tot++;
+            if(tot==0) continue;
+            LinearLayout rr=new LinearLayout(this); rr.setOrientation(LinearLayout.HORIZONTAL);
+            TextView nl=text(ty.replace("_"," "),11.5f,left==0?GREEN:T1,false); nl.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); rr.addView(nl);
+            rr.addView(text(left==0?"✔ done":(tot-left)+"/"+tot,11.5f,left==0?GREEN:T2,false)); tyc.addView(rr); }
+        col.addView(tyc);
 
         LinearLayout ex=card(); ex.addView(text("💾 DATA",9.5f,T2,true));
         TextView cp=text("COPY PROGRESS BACKUP",12,GREEN,true); cp.setBackground(box(CARD2,GREEN,6)); cp.setPadding(dp(14),dp(8),dp(14),dp(8));
@@ -470,7 +519,7 @@ public class MainActivity extends Activity {
                 chk=text("",17,T3,true); chk.setPadding(0,0,dp(8),0); row.addView(chk);
                 img=new android.widget.ImageView(MainActivity.this);
                 LinearLayout.LayoutParams ilp=new LinearLayout.LayoutParams(dp(44),dp(44)); ilp.rightMargin=dp(10);
-                img.setLayoutParams(ilp); img.setBackground(box(BG2,LINE,5)); row.addView(img);
+                img.setLayoutParams(ilp); img.setBackground(box(BG2,LINE,5)); img.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP); img.setClipToOutline(true); row.addView(img);
                 LinearLayout mid=new LinearLayout(MainActivity.this); mid.setOrientation(LinearLayout.VERTICAL);
                 mid.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
                 nm=text("",13.5f,T1,true); mid.addView(nm);

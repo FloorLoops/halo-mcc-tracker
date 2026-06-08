@@ -5,7 +5,7 @@
 
 *Every achievement. Every game. One terminal.*
 
-![version](https://img.shields.io/badge/version-1.0-5c8a3a?style=for-the-badge)
+![version](https://img.shields.io/badge/version-1.1-5c8a3a?style=for-the-badge)
 ![platform](https://img.shields.io/badge/Android%20·%20native-2d5a87?style=for-the-badge)
 ![database](https://img.shields.io/badge/database-690%20·%207110G-d4a017?style=for-the-badge)
 ![sync](https://img.shields.io/badge/Xbox%20Live-sync-107c10?style=for-the-badge)
@@ -38,7 +38,7 @@
 
 | Channel | What you get |
 |---|---|
-| [**Releases**](../../releases) | `UNSCTerminal-v1.0.apk` — native Android app (~65 KB, sideload) |
+| [**Releases**](../../releases) | `UNSCTerminal-v1.1.apk` — native Android app (sideload) |
 | [**Web**](https://floorloops.github.io/halo-mcc-tracker/) | Browser version — desktop-friendly, same database lineage |
 | `src/` | Full source — single-file Java, zero dependencies, no-Gradle build |
 
@@ -47,28 +47,9 @@
 | Phase | Focus | Status |
 |---|---|---|
 | **v1.0** | Native app · 690-achievement database · real icons · Xbox Live sync · guide links | ✅ shipped |
-| **v1.1** | Exact-700 reconciliation vs TrueAchievements · achievement icons fill their frame (crop-to-fit) · full UNSC rank ladder view · **estimated time-to-100%** · richer stats (per-type, per-difficulty, pace) | 🔜 next |
+| **v1.1** | Icons fill their frame (crop-to-fit) · full UNSC rank ladder view · **estimated time-to-100%** · richer stats (per-type breakdown) | ✅ shipped |
+| **v1.1.x** | Exact-700 reconciliation vs TrueAchievements (dedupe the 690→700) | 🔜 next |
 | **v1.2** | Per-game Halo icons · game-asset backgrounds + overall design pass | planned |
 | **v1.3** | Halo SFX (mutable) · animations & transitions | planned |
 | **v1.4** | Packaged notification sound · minor tweaks | planned |
-| **v1.5** | Home-screen widgets · ranking system overhaul with **Halo 3 rank icons** | planned |
-| **v1.6** | Per-achievement written walkthroughs · direct solution videos · path/collectible screenshots (skulls, terminals) | planned |
-| **v1.7** | **General tips & pointers** — practical hints blended from YouTube, Halopedia & TrueAchievements (e.g. "if the wall-glitch isn't working, try this angle") | planned |
-| **v1.8** | Optimal completion-order engine + least-pain LASO routing | planned |
-| **v2.0** | Generic **"100% Checklist"** edition for Google Play (original branding) | planned |
-
-## 🏗️ Building
-
-No Gradle, no Android Studio: `aapt2 → ecj → d8 → zipalign → apksigner`. The entire app is one Java file + one JSON database.
-
-## ⚖️ Disclaimer
-
-Unofficial fan-made tool, free, for personal use. *Halo* and *The Master Chief Collection* are trademarks of Microsoft Corporation / Halo Studios (343 Industries); achievement names, descriptions, and artwork remain Microsoft's property (icons served from [Halopedia](https://www.halopedia.org)'s gallery). This project is not affiliated with or endorsed by Microsoft. Any commercially distributed version will use original generic branding and assets only.
-
-## 📜 License
-
-Code © 2026 Parliament Four. All rights reserved.
-
----
-
-<div align="center"><i>"Were it so easy."</i></div>
+| **v1.5** | Home-screen widgets · ranking system overhaul with **Halo 3 rank icons** | pl
