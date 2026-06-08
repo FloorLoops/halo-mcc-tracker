@@ -106,7 +106,13 @@ public class MainActivity extends Activity {
         loadSet(metas,"metas"); loadCsv(visitedGames,"vgames"); addAllMetas();
         int h=java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
         if(h>=3 && h<4) unlockMeta("egg_cryo");
+        String lastVer=prefs.getString("lastVer",""); String curVer=appVer();
+        boolean updated = lastVer.length()>0 && !lastVer.equals(curVer);
         show("home"); checkMetas();
+        if(updated){ bulkUnlock=true; int before=metas.size(); checkMetas(); bulkUnlock=false; final int gained=metas.size()-before; final String fv=lastVer, tv=curVer;
+            root.postDelayed(new Runnable(){ public void run(){ showUpdateReview(fv,tv,gained); } },800); }
+        prefs.edit().putString("lastVer",curVer).apply();
+        if(PREMIUM && !metas.contains("meta_king")){ metas.add("meta_king"); saveSet(metas,"metas"); root.postDelayed(new Runnable(){ public void run(){ grandUnlock("👑","King of the Hill","You own this. The Parliament bows."); } }, updated?2600:1200); }
     }
 
     void loadSet(Set<String> s,String key){ String v=prefs.getString(key,""); if(v.length()>0) for(String x:v.split(",")) s.add(x); }
@@ -414,6 +420,20 @@ public class MainActivity extends Activity {
         xs.addView(text("Pulls your real unlock state from Xbox Live via OpenXBL (free key at xbl.io). Matches by achievement name.",9,T3,false));
         col.addView(xs);
 
+        LinearLayout gk=card(); gk.addView(text("📊 CAREER STATS KEY",9.5f,T2,true));
+        final EditText gkey=new EditText(this); gkey.setHint("Grunt API key (gruntapi.com)");
+        gkey.setText(prefs.getString("gruntKey","")); gkey.setHintTextColor(T3); gkey.setTextColor(T1); gkey.setTextSize(12);
+        gkey.setTypeface(Typeface.MONOSPACE); gkey.setBackground(box(BG2,LINE,6)); gkey.setPadding(dp(10),dp(9),dp(10),dp(9));
+        LinearLayout.LayoutParams gklp=new LinearLayout.LayoutParams(-1,-2); gklp.topMargin=dp(7); gkey.setLayoutParams(gklp); gk.addView(gkey);
+        TextView gsave=text("SAVE KEY",12,CYAN,true); gsave.setBackground(box(CARD2,CYAN,6)); gsave.setPadding(dp(18),dp(8),dp(18),dp(8));
+        LinearLayout.LayoutParams gslp=new LinearLayout.LayoutParams(-2,-2); gslp.topMargin=dp(8); gsave.setLayoutParams(gslp);
+        gsave.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
+            prefs.edit().putString("gruntKey",gkey.getText().toString().trim()).apply();
+            Toast.makeText(MainActivity.this,"✓ Grunt API key saved — career stats arrive in v1.3",Toast.LENGTH_SHORT).show(); } });
+        gk.addView(gsave);
+        gk.addView(text("Get ahead of v1.3: paste your Grunt API key now and career stats (medals, headshots, kills, accuracy, playtime) will light up automatically when that update lands.",9,T3,false));
+        col.addView(gk);
+
         int[] t=count(null);
         LinearLayout stc=card(); stc.addView(text("📊 STATS",9.5f,T2,true));
         stc.addView(text("unlocked  "+t[1]+" / "+t[0],12.5f,T1,false));
@@ -498,7 +518,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1.3 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -689,6 +709,7 @@ public class MainActivity extends Activity {
         metaDef("egg_bloom","egg","🌸","Bloom","???",true);
         metaDef("egg_parliament","egg","🦉","A Parliament of Four","???",true);
         metaDef("meta_allsecrets","allsecrets","🔓","Conspiracy Theorist","Discover all 11 hidden easter eggs scattered through the app",false);
+        if(PREMIUM) metaDef("meta_king","king","👑","King of the Hill","Own the app. (You built this.)",false);
     }
     String[] metaById(String id){ for(String[] m:METAS) if(m[0].equals(id)) return m; return null; }
     int gsDone(){ int g=0; for(JSONObject o:all) if(done.contains(o.optString("id"))) g+=o.optInt("gs"); return g; }
@@ -720,7 +741,8 @@ public class MainActivity extends Activity {
     void unlockMeta(String id){
         if(metas.contains(id)) return; String[] m=metaById(id); if(m==null) return;
         metas.add(id); saveSet(metas,"metas");
-        if(bulkUnlock) return; // silent during Xbox sync — no banner storm
+        if(bulkUnlock){ if(id.equals("meta_king")) grandUnlock(m[2],m[3],"The Parliament bows. Were it so easy."); return; }
+        if(id.equals("meta_king")){ grandUnlock(m[2],m[3],"The Parliament bows. Were it so easy."); return; }
         boolean egg = m[1].equals("egg");
         playUnlock(egg); buzz();
         showAchievementBanner(m[2],m[3],egg);
@@ -800,6 +822,39 @@ public class MainActivity extends Activity {
                 b.animate().translationY(dp(-160)).alpha(0f).setDuration(380).withEndAction(new Runnable(){ public void run(){ overlay.removeView(b); } }).start();
             } }, egg?3200:2400);
         } });
+    }
+
+    String appVer(){ try{ return getPackageManager().getPackageInfo(getPackageName(),0).versionName; }catch(Exception e){ return "?"; } }
+
+    void grandUnlock(final String icon,final String title,final String sub){
+        runOnUiThread(new Runnable(){ public void run(){
+            final FrameLayout fx=new FrameLayout(MainActivity.this); fx.setBackgroundColor(0xDD0A0E13);
+            overlay.addView(fx,new FrameLayout.LayoutParams(-1,-1));
+            final String[] emo={"👑","🛡️","🎖️","⭐","💛","✨","🔥","🦉"};
+            final java.util.Random rnd=new java.util.Random();
+            final int W=getResources().getDisplayMetrics().widthPixels, H=getResources().getDisplayMetrics().heightPixels;
+            for(int i=0;i<60;i++){ TextView e=text(emo[rnd.nextInt(emo.length)],20+rnd.nextInt(30),GOLD,false);
+                FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(-2,-2); lp.leftMargin=rnd.nextInt(W); lp.topMargin=-120-rnd.nextInt(500); e.setLayoutParams(lp);
+                fx.addView(e); e.animate().translationY(H+300).rotationBy(rnd.nextInt(900)-450).setDuration(2000+rnd.nextInt(1800)).setStartDelay(rnd.nextInt(900)).start(); }
+            LinearLayout card=new LinearLayout(MainActivity.this); card.setOrientation(LinearLayout.VERTICAL); card.setGravity(Gravity.CENTER);
+            card.setBackground(box(0xFF0D1117,GOLD,16)); card.setPadding(dp(28),dp(26),dp(28),dp(26));
+            FrameLayout.LayoutParams clp=new FrameLayout.LayoutParams(-2,-2); clp.gravity=Gravity.CENTER; clp.leftMargin=dp(22); clp.rightMargin=dp(22); card.setLayoutParams(clp);
+            card.addView(textC(icon,52)); card.addView(textC("✦ ✦ ✦",16,GOLD,true));
+            card.addView(textC(title,22,GOLD,true)); card.addView(textC(sub,12,T1,false));
+            card.setAlpha(0f); card.setScaleX(0.4f); card.setScaleY(0.4f);
+            fx.addView(card); card.animate().alpha(1f).scaleX(1f).scaleY(1f).setStartDelay(300).setDuration(700).start();
+            playUnlock(true); buzz();
+            fx.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ overlay.removeView(fx); } });
+            fx.postDelayed(new Runnable(){ public void run(){ try{ overlay.removeView(fx); }catch(Exception e){} } }, 6500);
+        } });
+    }
+
+    void showUpdateReview(String fromV,String toV,int gained){
+        String msg = "Updated to v"+toV+".\n\n";
+        if(gained>0) msg += "While you were away, "+gained+" new app achievement"+(gained==1?"":"s")+" were added that you ALREADY qualify for — they\u2019ve been unlocked silently (no banner spam).\n\n";
+        else msg += "New content may be live.\n\n";
+        msg += "Take a moment: More \u2192 \ud83c\udfc6 App Achievements to review everything new.";
+        new AlertDialog.Builder(this).setTitle("\u2728 What\u2019s New").setMessage(msg).setPositiveButton("REVIEW LATER",null).show();
     }
 
     /* ===== adapter ===== */
