@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
     FrameLayout overlay;
     int titleTaps=0, footerTaps=0, chipTaps=0; String chipLast="";
     long lastCheckMs=0; String lastCheckedId=""; int checkBurst=0;
+    boolean bulkUnlock=false;
 
     static final int BG=0xFF0A0E13, BG2=0xFF0D1117, CARD=0xFF151C26, CARD2=0xFF1C2533, LINE=0xFF21303F;
     static final int CYAN=0xFF00B8E8, GREEN=0xFF39D353, GOLD=0xFFFFD54F, ORANGE=0xFFFF8A50, PURPLE=0xFFCE93D8;
@@ -470,7 +471,7 @@ public class MainActivity extends Activity {
         ex.addView(text("Database: 690 achievements / 7,110G imported from Halopedia (live icons + wiki links). Exact-700 reconciliation vs TrueAchievements: next update.",9,T3,false));
         col.addView(ex);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1.x · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -547,8 +548,10 @@ public class MainActivity extends Activity {
             final int fm = matched; final String fe = err;
             runOnUiThread(new Runnable() { public void run() {
                 if (fe != null) { Toast.makeText(MainActivity.this, "sync failed: " + fe, Toast.LENGTH_LONG).show(); return; }
-                saveSet(done, "done"); unlockMeta("ftsync");
-                Toast.makeText(MainActivity.this, "✔ Xbox sync: +" + fm + " unlocked", Toast.LENGTH_LONG).show();
+                bulkUnlock=true; saveSet(done, "done");
+                int beforeM=metas.size(); unlockMeta("ftsync"); checkMetas(); bulkUnlock=false;
+                int gainedM=metas.size()-beforeM;
+                Toast.makeText(MainActivity.this, "✔ Xbox sync: +" + fm + " achievements · +" + gainedM + " app achievements (silent)", Toast.LENGTH_LONG).show();
                 show(tab); } });
         } });
     }
@@ -689,6 +692,7 @@ public class MainActivity extends Activity {
     void unlockMeta(String id){
         if(metas.contains(id)) return; String[] m=metaById(id); if(m==null) return;
         metas.add(id); saveSet(metas,"metas");
+        if(bulkUnlock) return; // silent during Xbox sync — no banner storm
         boolean egg = m[1].equals("egg");
         playUnlock(egg); buzz();
         showAchievementBanner(m[2],m[3],egg);
