@@ -48,9 +48,12 @@
 |---|---|---|
 | **v1.0** | Native app · 690-achievement database · real icons · Xbox Live sync · guide links | ✅ shipped |
 | **v1.1** | Exact-700 reconciliation vs TrueAchievements · achievement icons fill their frame (crop-to-fit) · full UNSC rank ladder view · **estimated time-to-100%** · richer stats (per-type, per-difficulty, pace) | 🔜 next |
-| **v1.2** | Per-game Halo icons · game-asset backgrounds + overall design pass · Halo SFX (mutable) · animations & transitions | planned |
-| **v1.3** | Per-achievement written walkthroughs · direct solution videos · path/collectible screenshots (skulls, terminals) | planned |
-| **v1.4** | Optimal completion-order engine + least-pain LASO routing | planned |
+| **v1.2** | Per-game Halo icons · game-asset backgrounds + overall design pass | planned |
+| **v1.3** | Halo SFX (mutable) · animations & transitions | planned |
+| **v1.4** | Packaged notification sound · minor tweaks | planned |
+| **v1.5** | Home-screen widgets · ranking system overhaul with **Halo 3 rank icons** | planned |
+| **v1.6** | Per-achievement written walkthroughs · direct solution videos · path/collectible screenshots (skulls, terminals) | planned |
+| **v1.7** | Optimal completion-order engine + least-pain LASO routing | planned |
 | **v2.0** | Generic **"100% Checklist"** edition for Google Play (original branding) | planned |
 
 ## 🏗️ Building
