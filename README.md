@@ -5,7 +5,7 @@
 
 *Every achievement. Every game. One terminal.*
 
-![version](https://img.shields.io/badge/version-1.1.5-5c8a3a?style=for-the-badge)
+![version](https://img.shields.io/badge/version-1.2-5c8a3a?style=for-the-badge)
 ![platform](https://img.shields.io/badge/Android%20·%20native-2d5a87?style=for-the-badge)
 ![database](https://img.shields.io/badge/database-690%20·%207110G-d4a017?style=for-the-badge)
 ![sync](https://img.shields.io/badge/Xbox%20Live-sync-107c10?style=for-the-badge)
@@ -52,9 +52,9 @@
 | **v1.0** | Native app · ~690-achievement database · real icons · guide links | ✅ shipped |
 | **v1.1.5** | **Xbox Live sync** (+ unlock dates) · **100+ in-app achievements** with animated unlock banners, sounds, replay & a climbing app-rank · hidden easter eggs · UNSC rank ladder · estimated time-to-100% · per-type stats · in-app roadmap · "What's New" update review · Grunt API key field · Halo Waypoint-inspired | ✅ shipped |
 | **v1.1.x** | Exact-700 reconciliation to the official Xbox list (let Xbox sync add any achievements the local DB is missing) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1) | 🔜 next |
-| **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · **choose your rank style: Halo 3 / Halo: Reach / modern MCC** · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
+| **v1.2** | **Overhauled ranking** (XP-weighted — heavier achievements lift your rank more than flat %) · **choose your rank style: modern MCC / Halo 3 / Halo: Reach** · **Focus Mode** — "best next targets" ranked by gamerscore-per-hour · **smart breakdown** (closest game to 100%, easiest category to clear, XP earned) | ✅ shipped |
 | **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |
-| **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass | planned |
+| **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass · **in-app feedback button that emails feature requests straight to the dev** | planned |
 | **v1.3.5** | **Achievement artwork viewer** — tap to view the full high-res achievement art (requires scraping + bundling HQ image sets) · optimization & full review pass | planned |
 | **v1.4** | Halo SFX (mutable) · animations & transitions | planned |
 | **v1.5** | Packaged notification sound · minor tweaks | planned |

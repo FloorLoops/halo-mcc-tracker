@@ -69,6 +69,26 @@ public class MainActivity extends Activity {
         {"75","Captain","⚫","ODST at 85%"},{"85","ODST Operative","🪖","Spartan at 93%"},
         {"93","Spartan","🟢","Noble Spartan at 99%"},{"99","Noble Spartan","🌟","Master Chief at 100%"},
         {"100","Master Chief","🎖️","Collection complete!"}};
+    // v1.2 — alternate rank ladders (choose your style)
+    static final String[][] RANKS_H3={
+        {"0","Recruit","🟫","Apprentice at 8%"},{"8","Apprentice","⬜","Private at 16%"},
+        {"16","Private","🔵","Corporal at 25%"},{"25","Corporal","🟦","Sergeant at 34%"},
+        {"34","Sergeant","🟡","Gunnery Sergeant at 43%"},{"43","Gunnery Sergeant","🟨","Lieutenant at 52%"},
+        {"52","Lieutenant","🟠","Captain at 61%"},{"61","Captain","🟧","Major at 70%"},
+        {"70","Major","🔴","Commander at 78%"},{"78","Commander","🟥","Colonel at 85%"},
+        {"85","Colonel","🟣","Brigadier at 91%"},{"91","Brigadier","🟪","General at 96%"},
+        {"96","General","⭐","Field Marshal at 99%"},{"99","Field Marshal","🎖️","Legend at 100%"},
+        {"100","Legend","🏆","Halo 3 legend!"}};
+    static final String[][] RANKS_REACH={
+        {"0","Recruit","🟫","Private at 7%"},{"7","Private","🔵","Corporal at 14%"},
+        {"14","Corporal","🟦","Sergeant at 21%"},{"21","Sergeant","🟡","Warrant Officer at 30%"},
+        {"30","Warrant Officer","🟨","Captain at 39%"},{"39","Captain","🟠","Major at 48%"},
+        {"48","Major","🟧","Lt. Colonel at 57%"},{"57","Lt. Colonel","🔴","Colonel at 65%"},
+        {"65","Colonel","🟥","Brigadier at 72%"},{"72","Brigadier","🟣","General at 79%"},
+        {"79","General","🟪","Field Marshal at 85%"},{"85","Field Marshal","⭐","Hero at 90%"},
+        {"90","Hero","🌟","Legend at 94%"},{"94","Legend","🎖️","Mythic at 97%"},
+        {"97","Mythic","👑","Inheritor at 100%"},{"100","Inheritor","🏆","Reach pinnacle!"}};
+    static final String[] RANK_STYLE_NAMES={"MCC","Halo 3","Reach"};
     static final String[] TYPES={"all","story","skull","terminal","speed","legendary","laso","multiplayer","firefight","spartan_ops","collectible","meta"};
 
     Map<String,JSONObject> games=new LinkedHashMap<String,JSONObject>();
@@ -134,7 +154,26 @@ public class MainActivity extends Activity {
     int[] count(String gid){ int n=0,dn=0,gs=0,gsd=0;
         for(JSONObject o:all){ if(gid!=null&&!gid.equals(o.optString("game"))) continue; n++; gs+=o.optInt("gs");
             if(done.contains(o.optString("id"))){dn++; gsd+=o.optInt("gs");}} return new int[]{n,dn,gs,gsd}; }
-    String[] rank(int pct){ String[] cur=RANKS[0]; for(String[] r:RANKS) if(pct>=Integer.parseInt(r[0])) cur=r; return cur; }
+    /* v1.2 rank system */
+    String[][] ranks(){ int s=prefs.getInt("rankStyle",0); return s==1?RANKS_H3:(s==2?RANKS_REACH:RANKS); }
+    String rankStyleName(){ int s=prefs.getInt("rankStyle",0); return RANK_STYLE_NAMES[s<0||s>2?0:s]; }
+    String[] rank(int pct){ String[][] L=ranks(); String[] cur=L[0]; for(String[] r:L) if(pct>=Integer.parseInt(r[0])) cur=r; return cur; }
+    // v1.2 XP-weighted completion: gamerscore earned / total (heavier achievements count more)
+    int xpPct(){ int[] t=count(null); return t[2]==0?0:100*t[3]/t[2]; }
+    boolean xpBasis(){ return prefs.getBoolean("rankXp",true); }
+    int rankPct(){ int[] t=count(null); int ap=t[0]==0?0:100*t[1]/t[0]; return xpBasis()?xpPct():ap; }
+    // v1.2 focus mode: best gamerscore for least time among undone achievements
+    double focusScore(JSONObject o){ double h=parseHrs(o.optString("time","")); if(h<=0) h=0.4;
+        double g=Math.max(o.optInt("gs"),5); double s=g/h;
+        if(o.optBoolean("missable")) s*=1.3; String d=o.optString("diff","").toLowerCase();
+        if(d.contains("easy")) s*=1.25; else if(d.contains("hard")||d.contains("legend")) s*=0.7; return s; }
+    java.util.List<JSONObject> focusPicks(int n){
+        java.util.List<JSONObject> todo=new java.util.ArrayList<JSONObject>();
+        for(JSONObject o:all) if(!done.contains(o.optString("id"))) todo.add(o);
+        java.util.Collections.sort(todo,new java.util.Comparator<JSONObject>(){
+            public int compare(JSONObject a,JSONObject b){ double va=focusScore(a),vb=focusScore(b); return va>vb?-1:(va<vb?1:0); } });
+        return todo.subList(0,Math.min(n,todo.size())); }
+    String gameName(String gid){ JSONObject g=games.get(gid); return g==null?gid:g.optString("name",gid); }
 
     /* ===== bottom nav ===== */
     View buildNav(){
@@ -173,18 +212,25 @@ public class MainActivity extends Activity {
         col.addView(text("MCC ACHIEVEMENT DATABASE · CLASSIFIED",9.5f,T3,false));
 
         int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0];
-        String[] rk=rank(pct);
+        int rpct=rankPct(); String[] rk=rank(rpct);
         LinearLayout rc=card(); rc.setBackground(box(CARD,CYAN,8));
         LinearLayout rrow=new LinearLayout(this); rrow.setOrientation(LinearLayout.HORIZONTAL); rrow.setGravity(Gravity.CENTER_VERTICAL);
         TextView ic=text(rk[2],30,T1,false); ic.setPadding(0,0,dp(12),0); rrow.addView(ic);
-        LinearLayout rcol=new LinearLayout(this); rcol.setOrientation(LinearLayout.VERTICAL);
-        rcol.addView(text("RANK",9,T3,true));
+        LinearLayout rcol=new LinearLayout(this); rcol.setOrientation(LinearLayout.VERTICAL); rcol.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
+        rcol.addView(text("RANK · "+rankStyleName().toUpperCase()+" STYLE",9,T3,true));
         rcol.addView(text(rk[1],19,CYAN,true));
         rcol.addView(text("▸ "+rk[3],10.5f,T2,false));
         rrow.addView(rcol);
         TextView ladderHint=text("▸",20,T3,true); rrow.addView(ladderHint);
         rc.addView(rrow);
+        // v1.2 — XP-weighted vs achievement basis (tap to toggle), and the rank %
+        final TextView basis=text((xpBasis()?"● XP-weighted "+xpPct()+"%":"○ XP-weighted "+xpPct()+"%")+"   ·   "+(xpBasis()?"○ achievements "+pct+"%":"● achievements "+pct+"%"),10,GOLD,false);
+        LinearLayout.LayoutParams blp2=new LinearLayout.LayoutParams(-1,-2); blp2.topMargin=dp(8); basis.setLayoutParams(blp2);
+        basis.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ prefs.edit().putBoolean("rankXp",!xpBasis()).apply(); show("home"); } });
+        rc.addView(basis);
+        rc.addView(text("XP-weighted: heavier achievements (more G) lift your rank more · tap above to switch · long-press to change style",8.5f,T3,false));
         rc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(PREMIUM) showRankLadder(); else upsell("Full rank ladder"); } });
+        rc.setOnLongClickListener(new View.OnLongClickListener(){ public boolean onLongClick(View v){ int s=(prefs.getInt("rankStyle",0)+1)%3; prefs.edit().putInt("rankStyle",s).apply(); Toast.makeText(MainActivity.this,"Rank style: "+RANK_STYLE_NAMES[s],Toast.LENGTH_SHORT).show(); show("home"); return true; } });
         col.addView(rc);
         // time-to-100 (premium)
         if(PREMIUM){
@@ -204,6 +250,41 @@ public class MainActivity extends Activity {
         oc.addView(bar(pct,GREEN));
         oc.addView(text("official database · 690 achievements · Halopedia import",8.5f,T3,false));
         col.addView(oc);
+
+        // v1.2 — FOCUS MODE: smart "what should I do next" + best-value targets
+        if(t[1]<t[0]){
+            LinearLayout fc=card();
+            fc.addView(text("🎯 FOCUS MODE · BEST NEXT TARGETS",9.5f,T2,true));
+            fc.addView(text("highest gamerscore for the least time — tap any to see its guide",8.5f,T3,false));
+            for(final JSONObject o:focusPicks(5)){
+                LinearLayout fr=new LinearLayout(this); fr.setOrientation(LinearLayout.HORIZONTAL); fr.setGravity(Gravity.CENTER_VERTICAL);
+                fr.setPadding(0,dp(6),0,dp(6));
+                TextView fi=text(o.optString("icon","🎯"),17,T1,false); fi.setPadding(0,0,dp(10),0); fr.addView(fi);
+                LinearLayout fcol=new LinearLayout(this); fcol.setOrientation(LinearLayout.VERTICAL); fcol.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
+                fcol.addView(text(o.optString("name"),12.5f,T1,true));
+                String tm=o.optString("time",""); String gm=gameName(o.optString("game")).replace("Halo: ","").replace("Halo ","H");
+                fcol.addView(text(gm+" · "+o.optInt("gs")+"G"+(tm.length()>0?" · ~"+tm:"")+(o.optBoolean("missable")?" · ⚠ missable":""),9.5f,T2,false));
+                fr.addView(fcol);
+                fr.addView(text("▸",14,CYAN,true));
+                fr.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ showDetail(null,o); } });
+                fc.addView(fr);
+            }
+            // smart breakdown — closest game + easiest type to clear
+            String closeG=null; int closeP=-1, closeLeft=0;
+            for(Map.Entry<String,JSONObject> e:games.entrySet()){ int[] c=count(e.getKey()); if(c[0]==0) continue; int gp=100*c[1]/c[0];
+                if(gp<100 && gp>closeP){ closeP=gp; closeG=e.getValue().optString("name"); closeLeft=c[0]-c[1]; } }
+            String bestTy=null; int bestLeft=Integer.MAX_VALUE;
+            for(String ty:TYPES){ if(ty.equals("all")||ty.equals("meta")) continue; int left=countType(ty); if(left>0 && left<bestLeft){ bestLeft=left; bestTy=ty; } }
+            LinearLayout sb=new LinearLayout(this); sb.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams sblp=new LinearLayout.LayoutParams(-1,-2); sblp.topMargin=dp(8); sb.setLayoutParams(sblp);
+            sb.setBackground(box(CARD2,LINE,6)); sb.setPadding(dp(10),dp(8),dp(10),dp(8));
+            sb.addView(text("📈 SMART BREAKDOWN",9,GOLD,true));
+            if(closeG!=null) sb.addView(text("closest game: "+closeG+" — "+closeP+"% ("+closeLeft+" left)",10,T1,false));
+            if(bestTy!=null) sb.addView(text("easiest category to finish: "+bestTy.replace("_"," ")+" ("+bestLeft+" left)",10,T1,false));
+            sb.addView(text("gamerscore earned: "+t[3]+" / "+t[2]+" G ("+xpPct()+"%)",10,GOLD,false));
+            fc.addView(sb);
+            col.addView(fc);
+        }
 
         for(Map.Entry<String,JSONObject> e:games.entrySet()){
             final String gid=e.getKey(); JSONObject g=e.getValue();
@@ -244,9 +325,20 @@ public class MainActivity extends Activity {
     void showRankLadder(){
         ScrollView sv=new ScrollView(this); LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
         col.setPadding(dp(8),dp(4),dp(8),dp(8)); sv.addView(col);
-        int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0];
-        col.addView(text("UNSC RANK LADDER · you're at "+pct+"%",11,CYAN,true));
-        for(String[] r:RANKS){ int rp=Integer.parseInt(r[0]); boolean reached=pct>=rp; boolean curr=r==rank(pct);
+        int rpct=rankPct();
+        col.addView(text("UNSC RANK LADDER · "+rankStyleName().toUpperCase()+" · you're at "+rpct+"% ("+(xpBasis()?"XP-weighted":"achievements")+")",10.5f,CYAN,true));
+        // style switcher chips
+        LinearLayout chips=new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams clp=new LinearLayout.LayoutParams(-1,-2); clp.topMargin=dp(8); clp.bottomMargin=dp(4); chips.setLayoutParams(clp);
+        final AlertDialog[] dref=new AlertDialog[1];
+        for(int i=0;i<3;i++){ final int si=i; boolean on=prefs.getInt("rankStyle",0)==i;
+            TextView chip=text(RANK_STYLE_NAMES[i],11,on?CYAN:T2,on); chip.setGravity(Gravity.CENTER);
+            chip.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,14)); chip.setPadding(dp(12),dp(7),dp(12),dp(7));
+            LinearLayout.LayoutParams chlp=new LinearLayout.LayoutParams(0,-2,1f); if(i>0) chlp.leftMargin=dp(6); chip.setLayoutParams(chlp);
+            chip.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ prefs.edit().putInt("rankStyle",si).apply(); if(dref[0]!=null) dref[0].dismiss(); showRankLadder(); } });
+            chips.addView(chip); }
+        col.addView(chips);
+        for(String[] r:ranks()){ int rp=Integer.parseInt(r[0]); boolean reached=rpct>=rp; boolean curr=r==rank(rpct);
             LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
             row.setBackground(box(curr?CARD2:CARD, curr?CYAN:LINE, 6)); row.setPadding(dp(12),dp(10),dp(12),dp(10));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.topMargin=dp(6); row.setLayoutParams(lp);
@@ -255,7 +347,7 @@ public class MainActivity extends Activity {
             c2.addView(text(r[1],14,reached?(curr?CYAN:GREEN):T2,curr));
             c2.addView(text("unlocks at "+rp+"%",9.5f,T3,false)); row.addView(c2);
             row.addView(text(reached?"✔":"",15,GREEN,true)); col.addView(row); }
-        new AlertDialog.Builder(this).setView(sv).setPositiveButton("CLOSE",null).show();
+        dref[0]=new AlertDialog.Builder(this).setView(sv).setPositiveButton("CLOSE",null).create(); dref[0].show();
     }
 
     /* ===== GAMES ===== */
@@ -505,7 +597,7 @@ public class MainActivity extends Activity {
             } else { boolean vis=grid.getVisibility()==View.VISIBLE; grid.setVisibility(vis?View.GONE:View.VISIBLE); toggle.setText(vis?"▸ show list":"▾ hide list"); }
         } });
         ac.addView(toggle); ac.addView(grid);
-        ac.addView(text("tap any unlocked achievement to replay its unlock · rank climbs as you earn more (XP overhaul in v1.2)",8.5f,T3,false));
+        ac.addView(text("tap any unlocked achievement to replay its unlock · rank is now XP-weighted — heavier achievements lift it more (v1.2)",8.5f,T3,false));
         col.addView(ac);
 
         LinearLayout ex=card(); ex.addView(text("💾 DATA",9.5f,T2,true));
@@ -523,10 +615,10 @@ public class MainActivity extends Activity {
         String[][] RM={
             {"1","v1.0","Native app · ~690-achievement database (Halopedia) · real icons · guides"},
             {"1","v1.1.5","Xbox Live sync (+ unlock dates) · 100+ in-app achievements: animated banners, sounds, replay, app-rank, secrets · rank ladder · time-to-100% · per-type stats · in-app roadmap"},
-            {"0","v1.1.x","Exact-700 reconciliation (via Xbox sync) · smart weighted time-to-completion"},
-            {"0","v1.2","XP-weighted ranking overhaul · choose rank style: Halo 3 / Reach / MCC · smart breakdowns & focus mode"},
+            {"1","v1.2","XP-weighted ranking overhaul · choose rank style: MCC / Halo 3 / Reach · focus mode (best next targets) · smart breakdowns"},
+            {"0","v1.2.x","Exact-700 reconciliation (via Xbox sync) · smart weighted time-to-completion"},
             {"0","v1.2.5","Native UI glow-up (match the web version)"},
-            {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass"},
+            {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass · in-app feedback button → emails floorloops@parliamentfour.com directly"},
             {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
             {"0","v1.4","Halo SFX & animations"},
             {"0","v1.5","Notification sound · tweaks"},
@@ -544,7 +636,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1.5 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -939,10 +1031,10 @@ public class MainActivity extends Activity {
 
     void showUpdateReview(String fromV,String toV,int gained){
         String msg = "Updated to v"+toV+".\n\n";
-        if(gained>0) msg += "While you were away, "+gained+" new app achievement"+(gained==1?"":"s")+" were added that you ALREADY qualify for — they\u2019ve been unlocked silently (no banner spam).\n\n";
+        if(gained>0) msg += "While you were away, "+gained+" new app achievement"+(gained==1?"":"s")+" were added that you ALREADY qualify for — they’ve been unlocked silently (no banner spam).\n\n";
         else msg += "New content may be live.\n\n";
-        msg += "Take a moment: More \u2192 \ud83c\udfc6 App Achievements to review everything new — tap any unlocked one to REPLAY its unlock animation.";
-        new AlertDialog.Builder(this).setTitle("\u2728 What\u2019s New").setMessage(msg).setPositiveButton("REVIEW LATER",null).show();
+        msg += "Take a moment: More → 🏆 App Achievements to review everything new — tap any unlocked one to REPLAY its unlock animation.";
+        new AlertDialog.Builder(this).setTitle("✨ What’s New").setMessage(msg).setPositiveButton("REVIEW LATER",null).show();
     }
 
     /* ===== adapter ===== */
