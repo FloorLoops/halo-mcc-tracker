@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class MainActivity extends Activity {
+    static final boolean PREMIUM = false; // public free build
+
     static final int BG=0xFF0A0E13, BG2=0xFF0D1117, CARD=0xFF151C26, CARD2=0xFF1C2533, LINE=0xFF21303F;
     static final int CYAN=0xFF00B8E8, GREEN=0xFF39D353, GOLD=0xFFFFD54F, ORANGE=0xFFFF8A50, PURPLE=0xFFCE93D8;
     static final int T1=0xFFD6E2EE, T2=0xFF8B9AB0, T3=0xFF55677A;
@@ -150,16 +152,18 @@ public class MainActivity extends Activity {
         rrow.addView(rcol);
         TextView ladderHint=text("▸",20,T3,true); rrow.addView(ladderHint);
         rc.addView(rrow);
-        rc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ showRankLadder(); } });
+        rc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(PREMIUM) showRankLadder(); else upsell("Full rank ladder"); } });
         col.addView(rc);
-        // time-to-100
-        LinearLayout tc=card();
-        tc.addView(text("⏳ ESTIMATED TIME TO 100%",9.5f,T2,true));
-        double[] est=timeLeft();
-        tc.addView(text(fmtHours(est[0])+" remaining",20,GOLD,true));
-        tc.addView(text(fmtHours(est[1])+" total campaign · "+fmtHours(est[1]-est[0])+" done",10.5f,T2,false));
-        tc.addView(text("rough estimate from per-achievement time tags (where known)",8.5f,T3,false));
-        col.addView(tc);
+        // time-to-100 (premium)
+        if(PREMIUM){
+            LinearLayout tc=card();
+            tc.addView(text("⏳ ESTIMATED TIME TO 100%",9.5f,T2,true));
+            double[] est=timeLeft();
+            tc.addView(text(fmtHours(est[0])+" remaining",20,GOLD,true));
+            tc.addView(text(fmtHours(est[1])+" total campaign · "+fmtHours(est[1]-est[0])+" done",10.5f,T2,false));
+            tc.addView(text("rough estimate from per-achievement time tags (where known)",8.5f,T3,false));
+            col.addView(tc);
+        }
 
         LinearLayout oc=card();
         oc.addView(text("CAMPAIGN PROGRESS",9.5f,T2,true));
@@ -184,6 +188,12 @@ public class MainActivity extends Activity {
             col.addView(gc); }
         TextView foot=text("\n◇ FOR PERSONAL GLORY ◇",9.5f,T3,false); foot.setGravity(Gravity.CENTER); col.addView(foot);
         return sv;
+    }
+
+    void upsell(String feat){
+        new AlertDialog.Builder(this).setTitle("✦ "+feat)
+            .setMessage(feat+" is part of UNSC Terminal Plus.\n\nUnlock Xbox Live sync, time-to-100%, full rank ladder, and detailed stats.")
+            .setPositiveButton("OK",null).show();
     }
 
     double parseHrs(String t){ if(t==null) return 0; t=t.trim().toLowerCase();
@@ -369,7 +379,7 @@ public class MainActivity extends Activity {
         TextView syncB=text("⚡ SYNC NOW",12,GOLD,true); syncB.setBackground(box(CARD2,GOLD,6)); syncB.setPadding(dp(18),dp(8),dp(18),dp(8));
         LinearLayout.LayoutParams xlp=new LinearLayout.LayoutParams(-2,-2); xlp.topMargin=dp(8); xlp.leftMargin=dp(8); syncB.setLayoutParams(xlp);
         syncB.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
-            prefs.edit().putString("xblKey",key.getText().toString().trim()).apply(); xboxSync(); } });
+            prefs.edit().putString("xblKey",key.getText().toString().trim()).apply(); if(PREMIUM) xboxSync(); else upsell("Xbox Live auto-sync"); } });
         xrow.addView(syncB); xs.addView(xrow);
         xs.addView(text("Pulls your real unlock state from Xbox Live via OpenXBL (free key at xbl.io). Matches by achievement name.",9,T3,false));
         col.addView(xs);
@@ -382,6 +392,7 @@ public class MainActivity extends Activity {
         stc.addView(text("LASO left  "+countType("laso")+"   ·   skulls left  "+countType("skull"),12.5f,PURPLE,false));
         double[] est2=timeLeft(); stc.addView(text("est. time to 100%  "+fmtHours(est2[0]),12.5f,GOLD,false));
         col.addView(stc);
+        if(PREMIUM){
         LinearLayout tyc=card(); tyc.addView(text("📂 BY TYPE (left to do)",9.5f,T2,true));
         String[] tys={"story","skull","terminal","speed","legendary","laso","multiplayer","firefight","spartan_ops","collectible"};
         for(String ty:tys){ int left=countType(ty); int tot=0; for(JSONObject o:all) if(ty.equals(o.optString("type"))) tot++;
@@ -389,7 +400,7 @@ public class MainActivity extends Activity {
             LinearLayout rr=new LinearLayout(this); rr.setOrientation(LinearLayout.HORIZONTAL);
             TextView nl=text(ty.replace("_"," "),11.5f,left==0?GREEN:T1,false); nl.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); rr.addView(nl);
             rr.addView(text(left==0?"✔ done":(tot-left)+"/"+tot,11.5f,left==0?GREEN:T2,false)); tyc.addView(rr); }
-        col.addView(tyc);
+        col.addView(tyc); }
 
         LinearLayout ex=card(); ex.addView(text("💾 DATA",9.5f,T2,true));
         TextView cp=text("COPY PROGRESS BACKUP",12,GREEN,true); cp.setBackground(box(CARD2,GREEN,6)); cp.setPadding(dp(14),dp(8),dp(14),dp(8));
