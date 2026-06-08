@@ -49,20 +49,13 @@
 
 | Phase | Focus | Status |
 |---|---|---|
-| **v1.0** | Native app · 690-achievement database · real icons · Xbox Live sync · guide links | ✅ shipped |
-| **v1.1** | Icons fill their frame (crop-to-fit) · full UNSC rank ladder · estimated time-to-100% · per-type stats | ✅ shipped |
-| **v1.1.1** | **100 in-app achievements** (icons · animated unlock banners · sounds · app-rank) + hidden easter eggs + Halo Waypoint-inspired credit | ✅ shipped |
-| **v1.1.2** | In-app roadmap · Xbox sync no longer storms 100 unlock banners · 101 achievements with how-to-unlock descriptions + a "find all secrets" meta-achievement | ✅ shipped |
-| **v1.1.3** | "What's New" update-review screen (new content reconciles silently, then a single summary) · Grunt API key field (get ahead of v1.3 career stats) | ✅ shipped |
-| **v1.1.4** | Achievement list shows each one's unlock requirement (not just "locked") · **unlock date/time captured from Xbox sync** (shown in achievement details) | ✅ shipped |
-| **v1.1.5** | Tap any unlocked achievement to **replay its unlock animation/toast** — final polish before the v1.2 overhaul | ✅ shipped |
-| **v1.1.6** | Robust Xbox Live sync — verifies key, finds MCC dynamically, clear per-step error messages | ✅ shipped |
-| **v1.1.x** | Exact-700 reconciliation to the official Xbox list (the easiest path: let Xbox sync add any achievements the local DB is missing) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1; weight by type/skull-stacking/legendary, not a flat per-achievement guess) | 🔜 next |
+| **v1.0** | Native app · ~690-achievement database · real icons · guide links | ✅ shipped |
+| **v1.1.5** | **Xbox Live sync** (+ unlock dates) · **100+ in-app achievements** with animated unlock banners, sounds, replay & a climbing app-rank · hidden easter eggs · UNSC rank ladder · estimated time-to-100% · per-type stats · in-app roadmap · "What's New" update review · Grunt API key field · Halo Waypoint-inspired | ✅ shipped |
+| **v1.1.x** | Exact-700 reconciliation to the official Xbox list (let Xbox sync add any achievements the local DB is missing) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1) | 🔜 next |
 | **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · **choose your rank style: Halo 3 / Halo: Reach / modern MCC** · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
 | **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |
 | **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass | planned |
-| **v1.3.5** | **Achievement artwork viewer** — tap to view the full high-res achievement art (requires scraping + bundling HQ image sets) | planned |
-| **v1.3.1** | Optimization & tweaks — full review pass, fix small issues + anything that slipped through | planned |
+| **v1.3.5** | **Achievement artwork viewer** — tap to view the full high-res achievement art (requires scraping + bundling HQ image sets) · optimization & full review pass | planned |
 | **v1.4** | Halo SFX (mutable) · animations & transitions | planned |
 | **v1.5** | Packaged notification sound · minor tweaks | planned |
 | **v1.6** | Home-screen widgets | planned |

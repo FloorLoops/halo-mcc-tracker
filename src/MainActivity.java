@@ -498,12 +498,10 @@ public class MainActivity extends Activity {
 
         LinearLayout rm=card(); rm.addView(text("🗺️ ROADMAP",9.5f,T2,true));
         String[][] RM={
-            {"1","v1.0","Native app · 690-achievement database · real icons · Xbox sync · guides"},
-            {"1","v1.1","Icons crop-to-fit · rank ladder · time-to-100% · per-type stats"},
-            {"1","v1.1.1","100 in-app achievements · animated banners · sounds · app-rank · secrets"},
-            {"1","v1.1.2","In-app roadmap · sync no longer storms banners"},
-            {"0","v1.1.x","Exact-700 reconciliation · smart weighted time-to-completion"},
-            {"0","v1.2","XP-weighted ranking overhaul · Halo 3 rank icons · smart breakdowns & focus mode"},
+            {"1","v1.0","Native app · ~690-achievement database (Halopedia) · real icons · guides"},
+            {"1","v1.1.5","Xbox Live sync (+ unlock dates) · 100+ in-app achievements: animated banners, sounds, replay, app-rank, secrets · rank ladder · time-to-100% · per-type stats · in-app roadmap"},
+            {"0","v1.1.x","Exact-700 reconciliation (via Xbox sync) · smart weighted time-to-completion"},
+            {"0","v1.2","XP-weighted ranking overhaul · choose rank style: Halo 3 / Reach / MCC · smart breakdowns & focus mode"},
             {"0","v1.2.5","Native UI glow-up (match the web version)"},
             {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass"},
             {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
@@ -523,7 +521,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1.6 · native (final pre-v1.2)\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1.5 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -598,7 +596,10 @@ public class MainActivity extends Activity {
                     if (!ar[0].equals("200")) { err = "couldn't load MCC achievements (HTTP " + ar[0] + "). Play MCC once on this account, then retry."; }
                     else {
                         JSONObject root = new JSONObject(ar[1]);
-                        JSONArray arr = root.optJSONArray("achievements");
+                        JSONArray arr = null;
+                        JSONObject content = root.optJSONObject("content");
+                        if (content != null) arr = content.optJSONArray("achievements");
+                        if (arr == null) arr = root.optJSONArray("achievements");
                         if (arr == null) arr = root.optJSONArray("titleAchievements");
                         if (arr == null) { err = "no achievements returned — body: " + ar[1].substring(0, Math.min(140, ar[1].length())); }
                         else {
