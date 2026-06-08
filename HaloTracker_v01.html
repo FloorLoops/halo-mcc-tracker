@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNSC ACHIEVEMENT TERMINAL — MCC v0.1</title>
+<style>
+  :root {
+    --bg: #0a0c0e;
+    --surface: #111518;
+    --border: #1e3a2f;
+    --cortana: #00d4ff;
+    --green: #4cff8f;
+    --amber: #ffb347;
+    --red: #ff4444;
+    --text: #c8d8c8;
+    --muted: #5a7a6a;
+    --header-bg: #0d1f17;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--header-bg); border-bottom: 2px solid var(--green); padding: 16px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .logo { font-size: 22px; color: var(--green); font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
+  .logo span { color: var(--cortana); }
+  .tagline { color: var(--muted); font-size: 11px; letter-spacing: 2px; }
+  .gamertag-bar { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .gamertag-bar input { background: #0a0c0e; border: 1px solid var(--border); color: var(--cortana); padding: 6px 10px; font-family: inherit; font-size: 13px; width: 160px; }
+  .gamertag-bar button { background: var(--green); color: #000; border: none; padding: 6px 12px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; letter-spacing: 1px; }
+
+  /* OVERALL PROGRESS */
+  .overall { background: var(--surface); border: 1px solid var(--border); margin: 16px; padding: 16px; }
+  .overall-title { color: var(--cortana); font-size: 11px; letter-spacing: 3px; margin-bottom: 10px; }
+  .stats-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stat { text-align: center; }
+  .stat-val { font-size: 28px; color: var(--green); font-weight: bold; }
+  .stat-lbl { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  .progress-bar { height: 8px; background: #1a2a1f; border: 1px solid var(--border); border-radius: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cortana)); transition: width 0.5s; }
+
+  /* GAME TABS */
+  .tabs { display: flex; gap: 0; padding: 0 16px; overflow-x: auto; border-bottom: 1px solid var(--border); }
+  .tab { padding: 10px 16px; font-family: inherit; font-size: 11px; letter-spacing: 2px; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; text-transform: uppercase; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+  .tab:hover { color: var(--text); }
+
+  /* GAME PANEL */
+  .game-panel { display: none; padding: 16px; }
+  .game-panel.active { display: block; }
+  .game-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .game-title { font-size: 18px; color: var(--green); letter-spacing: 2px; }
+  .game-subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .game-progress { text-align: right; }
+  .game-pct { font-size: 24px; color: var(--cortana); font-weight: bold; }
+
+  /* MODE SECTIONS */
+  .mode-section { margin-bottom: 20px; }
+  .mode-header { background: var(--header-bg); border-left: 3px solid var(--cortana); padding: 8px 12px; margin-bottom: 8px; font-size: 11px; letter-spacing: 3px; color: var(--cortana); text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; }
+  .mode-header:hover { background: #0d1f17; }
+
+  /* LEVEL SECTIONS */
+  .level-section { margin-bottom: 12px; padding-left: 12px; border-left: 1px solid var(--border); }
+  .level-name { font-size: 10px; letter-spacing: 2px; color: var(--amber); margin-bottom: 6px; text-transform: uppercase; }
+
+  /* ACHIEVEMENT ROW */
+  .ach { display: flex; align-items: flex-start; gap: 10px; padding: 8px; border: 1px solid transparent; cursor: pointer; transition: all 0.15s; margin-bottom: 4px; }
+  .ach:hover { background: #111e16; border-color: var(--border); }
+  .ach.done { opacity: 0.45; }
+  .ach-check { width: 18px; height: 18px; border: 2px solid var(--muted); background: none; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .ach.done .ach-check { border-color: var(--green); background: var(--green); color: #000; }
+  .ach-icon { font-size: 18px; flex-shrink: 0; }
+  .ach-body { flex: 1; }
+  .ach-name { font-size: 13px; color: var(--text); font-weight: bold; }
+  .ach-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .ach-meta { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .badge { font-size: 9px; padding: 2px 6px; letter-spacing: 1px; font-weight: bold; }
+  .badge-gs { background: #1a2a1f; color: var(--green); border: 1px solid var(--border); }
+  .badge-easy { background: #1a2a1f; color: #4cff8f; }
+  .badge-med { background: #1f1a0a; color: var(--amber); }
+  .badge-hard { background: #1f0a0a; color: #ff8844; }
+  .badge-vhard { background: #2a0a0a; color: var(--red); }
+  .badge-miss { background: #2a0a0a; color: var(--red); border: 1px solid var(--red); }
+  .badge-coop { background: #0a1a2a; color: var(--cortana); }
+  .ach-guide { display: none; font-size: 11px; color: var(--text); background: #0d1209; border-left: 3px solid var(--green); padding: 8px 10px; margin-top: 6px; line-height: 1.6; }
+  .ach.expanded .ach-guide { display: block; }
+  .ach-gs { font-size: 13px; color: var(--green); font-weight: bold; flex-shrink: 0; margin-left: auto; }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar input { background: #0a0c0e; border: 1px solid var(--border); color: var(--text); padding: 6px 10px; font-family: inherit; font-size: 12px; flex: 1; min-width: 160px; }
+  .filter-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 10px; font-family: inherit; font-size: 10px; letter-spacing: 1px; cursor: pointer; }
+  .filter-btn.active { border-color: var(--green); color: var(--green); }
+
+  /* RANK BANNER */
+  .rank-banner { background: linear-gradient(135deg, #0d1f17, #0a0c0e); border: 1px solid var(--green); padding: 10px 16px; margin: 0 16px 16px; display: flex; align-items: center; gap: 12px; }
+  .rank-icon { font-size: 28px; }
+  .rank-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  .rank-name { font-size: 16px; color: var(--green); font-weight: bold; letter-spacing: 2px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--header-bg); border: 2px solid var(--green); color: var(--green); padding: 10px 20px; font-size: 12px; letter-spacing: 2px; display: none; z-index: 999; text-align: center; max-width: 90vw; }
+  .toast.show { display: block; animation: fadeInOut 3s forwards; }
+  @keyframes fadeInOut { 0%{opacity:0;transform:translateX(-50%) translateY(10px)} 15%{opacity:1;transform:translateX(-50%) translateY(0)} 80%{opacity:1} 100%{opacity:0} }
+
+  @media(max-width:500px){ .stats-row{gap:12px} .stat-val{font-size:22px} .logo{font-size:16px} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">UNSC <span>ACHIEVEMENT</span> TERMINAL</div>
+    <div class="tagline">HALO: MASTER CHIEF COLLECTION — v0.1 FIELD DRAFT</div>
+  </div>
+  <div class="gamertag-bar">
+    <input type="text" id="gamertagInput" placeholder="ENTER GAMERTAG" maxlength="16">
+    <button onclick="saveGamertag()">SAVE</button>
+  </div>
+</div>
+
+<div id="rankBanner" class="rank-banner">
+  <div class="rank-icon" id="rankIcon">🪖</div>
+  <div>
+    <div class="rank-label">CURRENT RANK</div>
+    <div class="rank-name" id="rankName">RECRUIT</div>
+  </div>
+  <div style="margin-left:auto;text-align:right">
+    <div style="font-size:10px;color:var(--muted);letter-spacing:2px">SPARTAN ID</div>
+    <div style="font-size:14px;color:var(--cortana)" id="gamertagDisplay">—</div>
+  </div>
+</div>
+
+<div class="overall">
+  <div class="overall-title">▸ OVERALL MISSION STATUS</div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val" id="totalPct">0%</div><div class="stat-lbl">COMPLETE</div></div>
+    <div class="stat"><div class="stat-val" id="totalDone">0</div><div class="stat-lbl">UNLOCKED</div></div>
+    <div class="stat"><div class="stat-val" id="totalLeft">—</div><div class="stat-lbl">REMAINING</div></div>
+    <div class="stat"><div class="stat-val" id="totalGS">0</div><div class="stat-lbl">GAMERSCORE</div></div>
+    <div class="stat"><div class="stat-val" id="hoursLeft">—h</div><div class="stat-lbl">EST. REMAINING</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="overallBar" style="width:0%"></div></div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div id="panels"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── ACHIEVEMENT DATA ──────────────────────────────────────────────────────────
+// Format: { id, name, desc, gs, diff, time, icon, guide, missable, coop, mode, level }
+// diff: 'easy'|'med'|'hard'|'vhard'   mode: 'campaign'|'multiplayer'|'meta'
+
+const GAMES = [
+  { id:'ce',   title:'HALO: CE',            subtitle:'Combat Evolved Anniversary',  color:'#4cff8f' },
+  { id:'h2',   title:'HALO 2',              subtitle:'Anniversary Edition',          color:'#00d4ff' },
+  { id:'h3',   title:'HALO 3',              subtitle:'',                             color:'#ffb347' },
+  { id:'odst', title:'HALO 3: ODST',        subtitle:'',                             color:'#aaaaff' },
+  { id:'reach',title:'HALO: REACH',         subtitle:'',                             color:'#ff8844' },
+  { id:'h4',   title:'HALO 4',              subtitle:'',                             color:'#ff4488' },
+  { id:'meta', title:'MCC META',            subtitle:'Cross-game & Collection',      color:'#ffff55' },
+];
+
+const ACHIEVEMENTS = {
+ce: [
+  // CAMPAIGN
+  {id:'ce_1',name:'The Pillar of Autumn',desc:'Complete The Pillar of Autumn on Normal or higher.',gs:10,diff:'easy',time:0.5,icon:'📖',guide:'Story mission. Play on Normal. Unmissable.',mode:'campaign',level:'The Pillar of Autumn'},
+  {id:'ce_2',name:'Hold the Line',desc:'Complete The Pillar of Autumn on Heroic or higher.',gs:10,diff:'med',time:0.5,icon:'⚔️',guide:'Same mission, higher difficulty. Watch for Elites near escape pods.',mode:'campaign',level:'The Pillar of Autumn'},
+  {id:'ce_3',name:'Landfall',desc:'Complete Halo on Normal or higher.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Open-world beach assault. Stick to vehicles.',mode:'campaign',level:'Halo'},
+  {id:'ce_4',name:'Arrival',desc:'Complete Truth and Reconciliation on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Sniper-heavy level. Clear rooftops first.',mode:'campaign',level:'Truth and Reconciliation'},
+  {id:'ce_5',name:'The Silent Cartographer',desc:'Complete The Silent Cartographer on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Beach assault then interior. Use Warthog.',mode:'campaign',level:'The Silent Cartographer'},
+  {id:'ce_6',name:'Shut Up and Get Behind Me',desc:'Complete Assault on the Control Room on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Long linear level. Grab a Scorpion.',mode:'campaign',level:'Assault on the Control Room'},
+  {id:'ce_7',name:'343 Guilty Spark',desc:'Complete 343 Guilty Spark on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Flood introduction. Shotgun is key.',mode:'campaign',level:'343 Guilty Spark'},
+  {id:'ce_8',name:'The Library',desc:'Complete The Library on Normal.',gs:10,diff:'med',time:1.5,icon:'😰',guide:'Long repetitive flood gauntlet. Shotgun every Flood. Watch your ammo.',mode:'campaign',level:'The Library'},
+  {id:'ce_9',name:'Two Betrayals',desc:'Complete Two Betrayals on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Sniper rifles everywhere. Use vehicles aggressively.',mode:'campaign',level:'Two Betrayals'},
+  {id:'ce_10',name:'Keyes',desc:'Complete Keyes on Normal.',gs:10,diff:'med',time:1,icon:'📖',guide:'Flood + Covenant mashup. Plasma pistol Elites first.',mode:'campaign',level:'Keyes'},
+  {id:'ce_11',name:'The Maw',desc:'Complete The Maw on Normal.',gs:10,diff:'med',time:0.75,icon:'💥',guide:'Final level. The Warthog run at the end — memorize the turns.',mode:'campaign',level:'The Maw'},
+  {id:'ce_sc1',name:'Scorched Earth',desc:'Destroy all Covenant vehicles in T&R on Heroic+.',gs:10,diff:'hard',time:2,icon:'🔥',guide:'Must destroy Banshees, Wraiths. Use Rocket Launcher. Very easy to miss a Banshee.',missable:true,mode:'campaign',level:'Truth and Reconciliation'},
+  {id:'ce_sc2',name:'Skulls',desc:'Find all CE skulls.',gs:10,diff:'vhard',time:4,icon:'💀',guide:'8 skulls hidden across levels. Use a guide — Black Eye skull is particularly cruel. Most require precise timing or jumps.',mode:'campaign',level:'Collectibles'},
+  {id:'ce_laso',name:'LASO',desc:'Complete CE LASO (all skulls, Legendary).',gs:30,diff:'vhard',time:8,icon:'🏆',guide:'All skulls active on Legendary. Health packs off, limited ammo, hardest enemies. Co-op strongly recommended.',coop:true,mode:'campaign',level:'LASO'},
+  // MULTIPLAYER
+  {id:'ce_mp1',name:'Headmaster',desc:'Get 50 headshots in multiplayer.',gs:10,diff:'easy',time:3,icon:'🎯',guide:'Use the pistol or sniper. Boosting with a friend in a private match is fastest.',mode:'multiplayer',level:'Combat'},
+  {id:'ce_mp2',name:'Skunked!',desc:'Win a multiplayer game 10-0.',gs:10,diff:'med',time:2,icon:'🏅',guide:'Easiest in a private 1v1 with a boosting partner.',mode:'multiplayer',level:'General'},
+],
+
+h2: [
+  {id:'h2_1',name:'Cairo Station',desc:'Complete Cairo Station on Normal.',gs:10,diff:'easy',time:0.5,icon:'📖',guide:'Ship defense level. Follow objectives.',mode:'campaign',level:'Cairo Station'},
+  {id:'h2_2',name:'Outskirts',desc:'Complete Outskirts on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Urban combat. Jackal snipers on rooftops — deal with them first.',mode:'campaign',level:'Outskirts'},
+  {id:'h2_3',name:'Metropolis',desc:'Complete Metropolis on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Highway chase with Scorpion. One of the most fun levels.',mode:'campaign',level:'Metropolis'},
+  {id:'h2_4',name:'The Arbiter',desc:'Complete The Arbiter on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Stealth optional. Active camo helps but just fight through.',mode:'campaign',level:'The Arbiter'},
+  {id:'h2_5',name:'The Oracle',desc:'Complete The Oracle on Normal.',gs:10,diff:'med',time:1,icon:'📖',guide:'Flood returns. Shotgun + SMG combo.',mode:'campaign',level:'The Oracle'},
+  {id:'h2_6',name:'Delta Halo',desc:'Complete Delta Halo on Normal.',gs:10,diff:'easy',time:1.5,icon:'📖',guide:'Long outdoor mission. Grab Ghosts.',mode:'campaign',level:'Delta Halo'},
+  {id:'h2_7',name:'Regret',desc:'Complete Regret on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Boss fight at the end. Master hijacking Banshees.',mode:'campaign',level:'Regret'},
+  {id:'h2_8',name:'Sacred Icon',desc:'Complete Sacred Icon on Normal.',gs:10,diff:'hard',time:2,icon:'😰',guide:'Brutal Flood/Sentinel level. Very chaotic. Fuel Rod Gun helps.',mode:'campaign',level:'Sacred Icon'},
+  {id:'h2_9',name:'Quarantine Zone',desc:'Complete Quarantine Zone on Normal.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Vehicle-heavy outdoor section. Use Wraith if you can grab one.',mode:'campaign',level:'Quarantine Zone'},
+  {id:'h2_10',name:'Gravemind',desc:'Complete Gravemind on Normal.',gs:10,diff:'vhard',time:3,icon:'💀',guide:'Possibly the hardest level in Halo 2 on Legendary. Energy sword everything.',mode:'campaign',level:'Gravemind'},
+  {id:'h2_11',name:'Uprising',desc:'Complete Uprising on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Arbiter alone vs Brutes. Energy sword is your friend.',mode:'campaign',level:'Uprising'},
+  {id:'h2_12',name:'High Charity',desc:'Complete High Charity on Normal.',gs:10,diff:'hard',time:1.5,icon:'📖',guide:'Pure Flood survival. Shotgun mandatory.',mode:'campaign',level:'High Charity'},
+  {id:'h2_13',name:'The Great Journey',desc:'Complete The Great Journey on Normal.',gs:10,diff:'med',time:1,icon:'📖',guide:'Final mission. Scarab fight. Use the Wraith.',mode:'campaign',level:'The Great Journey'},
+  {id:'h2_laso',name:'LASO Master',desc:'Complete H2 on LASO.',gs:30,diff:'vhard',time:12,icon:'🏆',guide:'H2 Legendary LASO is considered one of the hardest things in gaming. Gravemind alone could take hours. Bring a co-op partner. Energy sword/Beam Rifle cheese required.',coop:true,mode:'campaign',level:'LASO'},
+],
+
+h3: [
+  {id:'h3_1',name:'Sierra 117',desc:'Complete Sierra 117 on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Jungle sniper level. Move slowly, pick off Brutes.',mode:'campaign',level:'Sierra 117'},
+  {id:'h3_2',name:'Crow\'s Nest',desc:'Complete Crow\'s Nest on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Base defense. Lots of Brutes. Gravity Hammer Brutes are lethal.',mode:'campaign',level:'Crow\'s Nest'},
+  {id:'h3_3',name:'Tsavo Highway',desc:'Complete Tsavo Highway on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Open highway. Mongoose or Warthog. Steer clear of Wraiths.',mode:'campaign',level:'Tsavo Highway'},
+  {id:'h3_4',name:'The Storm',desc:'Complete The Storm on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'City assault. Take down the Scarab at the end.',mode:'campaign',level:'The Storm'},
+  {id:'h3_5',name:'Floodgate',desc:'Complete Floodgate on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Short Flood mission. Shotgun.',mode:'campaign',level:'Floodgate'},
+  {id:'h3_6',name:'The Ark',desc:'Complete The Ark on Normal.',gs:10,diff:'med',time:2,icon:'📖',guide:'Massive outdoor level. Two Scarabs at the end. Use Hornet.',mode:'campaign',level:'The Ark'},
+  {id:'h3_7',name:'The Covenant',desc:'Complete The Covenant on Normal.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Three Scarabs. Hornet is OP here. Great level.',mode:'campaign',level:'The Covenant'},
+  {id:'h3_8',name:'Cortana',desc:'Complete Cortana on Normal.',gs:10,diff:'hard',time:1.5,icon:'📖',guide:'Pure Flood nightmare. Shotgun + Flamethrower. Very disorienting layout.',mode:'campaign',level:'Cortana'},
+  {id:'h3_9',name:'Halo',desc:'Complete Halo on Normal.',gs:10,diff:'med',time:1,icon:'📖',guide:'Final mission. Warthog run at the end. Emotional.',mode:'campaign',level:'Halo'},
+  {id:'h3_skulls',name:'Skull Collector',desc:'Find all H3 skulls.',gs:10,diff:'hard',time:5,icon:'💀',guide:'13 skulls across all missions. Some require precise jumps (e.g. IWHBYD requires jumping through specific rings in The Covenant). Use a video guide.',mode:'campaign',level:'Collectibles'},
+  {id:'h3_terminals',name:'Terminals',desc:'Find all H3 terminals.',gs:10,diff:'med',time:3,icon:'💻',guide:'7 terminals. Some are very hidden. Mainly background Forerunner lore.',mode:'campaign',level:'Collectibles'},
+  {id:'h3_laso',name:'Legend',desc:'Complete H3 LASO.',gs:30,diff:'vhard',time:10,icon:'🏆',guide:'LASO on Legendary. Cortana and The Ark are the cruelest sections. Bring co-op and a strategy guide.',coop:true,mode:'campaign',level:'LASO'},
+  // MP
+  {id:'h3_mp1',name:'Too Close to the Sun',desc:'Destroy an enemy Banshee in MP.',gs:10,diff:'easy',time:1,icon:'✈️',guide:'Maps with Banshees: Rat\'s Nest, Standoff. Board it for an easy hijack.',mode:'multiplayer',level:'Vehicles'},
+  {id:'h3_mp2',name:'Overkill',desc:'Get an Overkill in a matchmaking game.',gs:10,diff:'hard',time:5,icon:'💥',guide:'4 kills in 4 seconds. Easiest in Infection or with Energy Sword + overshield. Patience required.',mode:'multiplayer',level:'Combat'},
+],
+
+odst: [
+  {id:'odst_1',name:'Tayari Plaza',desc:'Complete Tayari Plaza.',gs:10,diff:'easy',time:0.5,icon:'📖',guide:'Short intro mission. Follow the path.',mode:'campaign',level:'Tayari Plaza'},
+  {id:'odst_2',name:'Uplift Reserve',desc:'Complete Uplift Reserve.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Open Warthog section. Fun and fast.',mode:'campaign',level:'Uplift Reserve'},
+  {id:'odst_3',name:'Kizingo Boulevard',desc:'Complete Kizingo Boulevard.',gs:10,diff:'med',time:1,icon:'📖',guide:'Scorpion tank section. Let the tank do the work.',mode:'campaign',level:'Kizingo Boulevard'},
+  {id:'odst_4',name:'ONI Alpha Site',desc:'Complete ONI Alpha Site.',gs:10,diff:'med',time:1,icon:'📖',guide:'Blow the bridge, then hold off waves. Rocket Launcher essential.',mode:'campaign',level:'ONI Alpha Site'},
+  {id:'odst_5',name:'NMPD HQ',desc:'Complete NMPD HQ.',gs:10,diff:'hard',time:1.5,icon:'📖',guide:'Hold the roof while waves come. Very hard on Legendary solo.',mode:'campaign',level:'NMPD HQ'},
+  {id:'odst_6',name:'Kikowani Station',desc:'Complete Kikowani Station.',gs:10,diff:'med',time:1,icon:'📖',guide:'Banshee aerial section. Fun dogfights.',mode:'campaign',level:'Kikowani Station'},
+  {id:'odst_7',name:'Data Hive',desc:'Complete Data Hive.',gs:10,diff:'hard',time:1.5,icon:'📖',guide:'Flood level. Very confusing maze-like layout. Shotgun mandatory.',mode:'campaign',level:'Data Hive'},
+  {id:'odst_8',name:'Coastal Highway',desc:'Complete Coastal Highway.',gs:10,diff:'med',time:1,icon:'📖',guide:'Final Warthog chase. Get good at the highway twists.',mode:'campaign',level:'Coastal Highway'},
+  {id:'odst_fire',name:'Firefight Legend',desc:'Complete all Firefight maps solo on Legendary.',gs:30,diff:'vhard',time:8,icon:'🔥',guide:'Survive all waves alone on Legendary. Shotgun + Silenced SMG. Use cover religiously.',mode:'firefight',level:'Firefight'},
+],
+
+reach: [
+  {id:'reach_1',name:'Winter Contingency',desc:'Complete Winter Contingency.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Intro mission. Stick with Carter, clear Covenant outposts.',mode:'campaign',level:'Winter Contingency'},
+  {id:'reach_2',name:'ONI: Sword Base',desc:'Complete ONI: Sword Base.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Base defense then assault. Use the turrets on the Wraiths.',mode:'campaign',level:'ONI: Sword Base'},
+  {id:'reach_3',name:'Nightfall',desc:'Complete Nightfall.',gs:10,diff:'easy',time:1,icon:'📖',guide:'Stealth mission. Jun covers you. Armor Lock if surrounded.',mode:'campaign',level:'Nightfall'},
+  {id:'reach_4',name:'Tip of the Spear',desc:'Complete Tip of the Spear.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Long assault. Kat will help. Multiple Wraiths.',mode:'campaign',level:'Tip of the Spear'},
+  {id:'reach_5',name:'Long Night of Solace',desc:'Complete Long Night of Solace.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Space combat section. The Sabre is fun. Focus fire on shields.',mode:'campaign',level:'Long Night of Solace'},
+  {id:'reach_6',name:'Exodus',desc:'Complete Exodus.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Urban combat. Jet Pack recommended. Watch the Hunters.',mode:'campaign',level:'Exodus'},
+  {id:'reach_7',name:'New Alexandria',desc:'Complete New Alexandria.',gs:10,diff:'med',time:2,icon:'📖',guide:'Open city with Falcon. Clear jammers efficiently.',mode:'campaign',level:'New Alexandria'},
+  {id:'reach_8',name:'The Package',desc:'Complete The Package.',gs:10,diff:'hard',time:2,icon:'📖',guide:'Hardest Reach mission. Final Zealot Elite gauntlet is brutal. Stock DMRs.',mode:'campaign',level:'The Package'},
+  {id:'reach_9',name:'The Pillar of Autumn',desc:'Complete The Pillar of Autumn.',gs:10,diff:'med',time:1,icon:'📖',guide:'Emotional final mission. Know it\'s the prequel to CE.',mode:'campaign',level:'The Pillar of Autumn'},
+  {id:'reach_lone',name:'Lone Wolf',desc:'Reach the score limit in Lone Wolf.',gs:10,diff:'easy',time:0.25,icon:'🌅',guide:'You cannot win — survive as long as possible. Achievement pops automatically.',mode:'campaign',level:'Lone Wolf'},
+  {id:'reach_laso',name:'Reach LASO',desc:'Complete Reach LASO.',gs:30,diff:'vhard',time:12,icon:'🏆',guide:'The Package on LASO solo is arguably the hardest thing in MCC. Co-op with a partner and checkpoint saves.',coop:true,mode:'campaign',level:'LASO'},
+  {id:'reach_mp1',name:'Score Attack',desc:'Score 15,000 in Score Attack Firefight.',gs:10,diff:'easy',time:2,icon:'🎯',guide:'Use Rockets if available. Focus score multipliers.',mode:'firefight',level:'Score Attack'},
+],
+
+h4: [
+  {id:'h4_1',name:'Dawn',desc:'Complete Dawn on Normal.',gs:10,diff:'easy',time:0.75,icon:'📖',guide:'Short prologue. Tutorial-style.',mode:'campaign',level:'Dawn'},
+  {id:'h4_2',name:'Requiem',desc:'Complete Requiem on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'First Promethean encounters. Sticky Detonator is fun here.',mode:'campaign',level:'Requiem'},
+  {id:'h4_3',name:'Forerunner',desc:'Complete Forerunner on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'More Prometheans. Learn to counter Watchers (kill first).',mode:'campaign',level:'Forerunner'},
+  {id:'h4_4',name:'Infinity',desc:'Complete Infinity on Normal.',gs:10,diff:'easy',time:1,icon:'📖',guide:'UNSC returns. Mix of Covenant and Prometheans.',mode:'campaign',level:'Infinity'},
+  {id:'h4_5',name:'Reclaimer',desc:'Complete Reclaimer on Normal.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Mammoth escort + Mantis mech section. Use the Mantis aggressively.',mode:'campaign',level:'Reclaimer'},
+  {id:'h4_6',name:'Shutdown',desc:'Complete Shutdown on Normal.',gs:10,diff:'hard',time:2,icon:'📖',guide:'Tower climbing sections. Crawlers swarm from all angles.',mode:'campaign',level:'Shutdown'},
+  {id:'h4_7',name:'Composer',desc:'Complete Composer on Normal.',gs:10,diff:'med',time:1.5,icon:'📖',guide:'Short intense level. Binary Rifle enemies.',mode:'campaign',level:'Composer'},
+  {id:'h4_8',name:'Midnight',desc:'Complete Midnight on Normal.',gs:10,diff:'med',time:1,icon:'📖',guide:'Final confrontation with Didact. Mostly linear.',mode:'campaign',level:'Midnight'},
+  {id:'h4_terminals',name:'Terminus',desc:'Find all H4 terminals.',gs:10,diff:'med',time:3,icon:'💻',guide:'7 terminals. Required for lore and an extra achievement. Some easily missed.',mode:'campaign',level:'Collectibles'},
+  {id:'h4_laso',name:'H4 LASO',desc:'Complete H4 LASO.',gs:30,diff:'vhard',time:8,icon:'🏆',guide:'Shutdown on LASO is the toughest chapter. Crawler swarms are unforgiving. Co-op saves sanity.',coop:true,mode:'campaign',level:'LASO'},
+  {id:'h4_mp1',name:'Spartan Warrior',desc:'Win 10 War Games matches.',gs:10,diff:'easy',time:3,icon:'🏅',guide:'Just play War Games (multiplayer). Any mode counts.',mode:'multiplayer',level:'General'},
+  {id:'h4_spartan',name:'Lone Wolf Legend',desc:'Complete all H4 Spartan Ops solo on Legendary.',gs:30,diff:'vhard',time:10,icon:'🔥',guide:'50 Spartan Ops missions on Legendary. Some are very short; a few are brutal. Sticky Detonator + Plasma Pistol combo.',mode:'spartan_ops',level:'Spartan Ops'},
+],
+
+meta: [
+  {id:'meta_1',name:'MCC: Complete',desc:'Complete all campaigns on Normal.',gs:50,diff:'med',time:40,icon:'🎮',guide:'Play through all 6 campaigns on Normal minimum.',mode:'meta',level:'Collection'},
+  {id:'meta_2',name:'Legendary All',desc:'Complete all campaigns on Legendary.',gs:100,diff:'vhard',time:80,icon:'🏆',guide:'The ultimate goal. Start with Reach or H3 if new to Legendary.',mode:'meta',level:'Collection'},
+  {id:'meta_3',name:'LASO King',desc:'Complete all LASO playlists.',gs:50,diff:'vhard',time:60,icon:'💀',guide:'Hardest achievement category in MCC. H2 LASO is the final boss of gaming.',coop:true,mode:'meta',level:'LASO'},
+  {id:'meta_4',name:'Halo 5 Stars',desc:'Earn 5 stars in all campaign missions.',gs:30,diff:'hard',time:20,icon:'⭐',guide:'Score Attack mode. Must hit score targets per mission. Some require multiple attempts.',mode:'meta',level:'Score'},
+  {id:'meta_5',name:'Achilles\' Heel',desc:'Win a match on every multiplayer map.',gs:30,diff:'med',time:15,icon:'🗺️',guide:'A lot of maps. Use custom games with a friend to knock these out.',coop:true,mode:'meta',level:'Multiplayer'},
+],
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let done = JSON.parse(localStorage.getItem('halo_done')||'{}');
+let gamertag = localStorage.getItem('halo_gt')||'';
+let activeGame = 'ce';
+let filterStatus = 'all';
+let searchQuery = '';
+
+// ─── RANKS ────────────────────────────────────────────────────────────────────
+const RANKS = [
+  {pct:0,  name:'RECRUIT',        icon:'🪖'},
+  {pct:5,  name:'PRIVATE',        icon:'🟢'},
+  {pct:15, name:'CORPORAL',       icon:'🟡'},
+  {pct:25, name:'SERGEANT',       icon:'🔴'},
+  {pct:40, name:'LIEUTENANT',     icon:'⭐'},
+  {pct:55, name:'CAPTAIN',        icon:'🌟'},
+  {pct:70, name:'MAJOR',          icon:'💫'},
+  {pct:80, name:'COLONEL',        icon:'🎖️'},
+  {pct:90, name:'COMMANDER',      icon:'🏅'},
+  {pct:95, name:'SPARTAN',        icon:'🤖'},
+  {pct:99, name:'MASTER CHIEF',   icon:'🟢🪖'},
+  {pct:100,name:'LEGENDARY 117',  icon:'🏆'},
+];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  if(gamertag){ document.getElementById('gamertagInput').value=gamertag; document.getElementById('gamertagDisplay').textContent=gamertag; }
+  buildTabs();
+  buildAllPanels();
+  updateOverall();
+}
+
+function buildTabs(){
+  const tc = document.getElementById('tabs');
+  GAMES.forEach(g=>{
+    const btn = document.createElement('button');
+    btn.className='tab'+(g.id===activeGame?' active':'');
+    btn.textContent=g.title;
+    btn.onclick=()=>switchGame(g.id);
+    tc.appendChild(btn);
+  });
+}
+
+function switchGame(id){
+  activeGame=id;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',GAMES[i].id===id));
+  document.querySelectorAll('.game-panel').forEach(p=>p.classList.toggle('active',p.dataset.game===id));
+}
+
+function buildAllPanels(){
+  const pc = document.getElementById('panels');
+  GAMES.forEach(g=>{
+    const panel = document.createElement('div');
+    panel.className='game-panel'+(g.id===activeGame?' active':'');
+    panel.dataset.game=g.id;
+    panel.innerHTML = buildGamePanel(g);
+    pc.appendChild(panel);
+  });
+  // Attach listeners
+  document.querySelectorAll('.ach').forEach(el=>{
+    el.addEventListener('click', e=>{
+      if(e.target.closest('.ach-check')) toggleAch(el.dataset.id);
+      else el.classList.toggle('expanded');
+    });
+  });
+}
+
+function buildGamePanel(g){
+  const achs = ACHIEVEMENTS[g.id]||[];
+  const modes = {};
+  achs.forEach(a=>{ if(!modes[a.mode]) modes[a.mode]={}; if(!modes[a.mode][a.level]) modes[a.mode][a.level]=[]; modes[a.mode][a.level].push(a); });
+  const total=achs.length, doneCount=achs.filter(a=>done[a.id]).length;
+  const pct=total?Math.round(doneCount/total*100):0;
+  const modeLabels={'campaign':'⚔️ CAMPAIGN','multiplayer':'🌐 MULTIPLAYER','firefight':'🔥 FIREFIGHT','spartan_ops':'🛸 SPARTAN OPS','meta':'🏅 COLLECTION','laso':'💀 LASO'};
+  let html=`<div class="game-header"><div><div class="game-title">${g.title}</div><div class="game-subtitle">${g.subtitle}</div></div><div class="game-progress"><div class="game-pct">${pct}%</div><div style="font-size:11px;color:var(--muted);letter-spacing:2px">${doneCount}/${total}</div></div></div>`;
+  html+=`<div class="progress-bar" style="margin-bottom:16px"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${g.color},var(--cortana))"></div></div>`;
+  html+=`<div class="filter-bar"><input type="text" placeholder="🔍 SEARCH ACHIEVEMENTS..." oninput="filterSearch(this.value,'${g.id}')" id="search_${g.id}"><button class="filter-btn active" onclick="setFilter('all','${g.id}',this)">ALL</button><button class="filter-btn" onclick="setFilter('todo','${g.id}',this)">TODO</button><button class="filter-btn" onclick="setFilter('done','${g.id}',this)">DONE</button><button class="filter-btn" onclick="setFilter('miss','${g.id}',this)">⚠️ MISSABLE</button></div>`;
+  Object.entries(modes).forEach(([mode,levels])=>{
+    html+=`<div class="mode-section"><div class="mode-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">${modeLabels[mode]||mode.toUpperCase()}<span>▾</span></div><div>`;
+    Object.entries(levels).forEach(([level,as])=>{
+      html+=`<div class="level-section"><div class="level-name">${level}</div>`;
+      as.forEach(a=>{ html+=buildAch(a); });
+      html+=`</div>`;
+    });
+    html+=`</div></div>`;
+  });
+  return html;
+}
+
+function buildAch(a){
+  const isDone=done[a.id];
+  const diffMap={easy:'easy',med:'med',hard:'hard',vhard:'vhard'};
+  const diffLabel={easy:'EASY',med:'MEDIUM',hard:'HARD',vhard:'VERY HARD'};
+  return `<div class="ach${isDone?' done':''}" data-id="${a.id}" data-miss="${a.missable?'1':'0'}">
+    <div class="ach-check">${isDone?'✓':''}</div>
+    <div class="ach-icon">${a.icon}</div>
+    <div class="ach-body">
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+      <div class="ach-meta">
+        <span class="badge badge-gs">⚡${a.gs}G</span>
+        <span class="badge badge-${diffMap[a.diff]}">${diffLabel[a.diff]}</span>
+        ${a.missable?'<span class="badge badge-miss">⚠️ MISSABLE</span>':''}
+        ${a.coop?'<span class="badge badge-coop">👥 CO-OP</span>':''}
+        <span class="badge" style="color:var(--muted)">⏱ ~${a.time}h</span>
+      </div>
+      <div class="ach-guide">${a.guide}</div>
+    </div>
+    <div class="ach-gs">${a.gs}G</div>
+  </div>`;
+}
+
+function toggleAch(id){
+  done[id]=!done[id];
+  localStorage.setItem('halo_done',JSON.stringify(done));
+  const el=document.querySelector(`.ach[data-id="${id}"]`);
+  if(el){
+    el.classList.toggle('done',done[id]);
+    const chk=el.querySelector('.ach-check');
+    chk.textContent=done[id]?'✓':'';
+    if(done[id]){ const name=el.querySelector('.ach-name').textContent; showToast(`✅ UNLOCKED: ${name}`); playChime(); }
+  }
+  updateOverall();
+  updateGamePct();
+}
+
+function updateGamePct(){
+  const achs=ACHIEVEMENTS[activeGame]||[];
+  const total=achs.length,doneCount=achs.filter(a=>done[a.id]).length;
+  const pct=total?Math.round(doneCount/total*100):0;
+  const panel=document.querySelector(`.game-panel[data-game="${activeGame}"]`);
+  if(panel){ const p=panel.querySelector('.game-pct'); if(p) p.textContent=pct+'%'; }
+}
+
+function updateOverall(){
+  const all=Object.values(ACHIEVEMENTS).flat();
+  const total=all.length,doneCount=all.filter(a=>done[a.id]).length;
+  const pct=total?Math.round(doneCount/total*100):0;
+  const gs=all.filter(a=>done[a.id]).reduce((s,a)=>s+a.gs,0);
+  const maxGs=all.reduce((s,a)=>s+a.gs,0);
+  const hoursLeft=all.filter(a=>!done[a.id]).reduce((s,a)=>s+a.time,0);
+  document.getElementById('totalPct').textContent=pct+'%';
+  document.getElementById('totalDone').textContent=doneCount;
+  document.getElementById('totalLeft').textContent=total-doneCount;
+  document.getElementById('totalGS').textContent=gs+'G';
+  document.getElementById('hoursLeft').textContent=Math.round(hoursLeft)+'h';
+  document.getElementById('overallBar').style.width=pct+'%';
+  // Rank
+  let rank=RANKS[0];
+  for(const r of RANKS){ if(pct>=r.pct) rank=r; }
+  document.getElementById('rankName').textContent=rank.name;
+  document.getElementById('rankIcon').textContent=rank.icon;
+}
+
+function filterSearch(q,game){
+  searchQuery=q.toLowerCase();
+  applyFilters(game);
+}
+function setFilter(f,game,btn){
+  filterStatus=f;
+  document.querySelectorAll(`[data-game="${game}"] .filter-btn`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters(game);
+}
+function applyFilters(game){
+  const panel=document.querySelector(`.game-panel[data-game="${game}"]`);
+  if(!panel) return;
+  panel.querySelectorAll('.ach').forEach(el=>{
+    const id=el.dataset.id;
+    const isDone=done[id];
+    const isMiss=el.dataset.miss==='1';
+    const name=el.querySelector('.ach-name').textContent.toLowerCase();
+    const matchSearch=!searchQuery||name.includes(searchQuery);
+    const matchFilter=filterStatus==='all'||(filterStatus==='done'&&isDone)||(filterStatus==='todo'&&!isDone)||(filterStatus==='miss'&&isMiss);
+    el.style.display=(matchSearch&&matchFilter)?'':'none';
+  });
+}
+
+function saveGamertag(){
+  gamertag=document.getElementById('gamertagInput').value.trim();
+  localStorage.setItem('halo_gt',gamertag);
+  document.getElementById('gamertagDisplay').textContent=gamertag||'—';
+  showToast('SPARTAN ID SAVED: '+gamertag);
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast';
+  void t.offsetWidth;
+  t.className='toast show';
+}
+
+function playChime(){
+  try{
+    const a=new(window.AudioContext||window.webkitAudioContext)();
+    const o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.setValueAtTime(880,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1200,a.currentTime+0.15);
+    g.gain.setValueAtTime(0.3,a.currentTime);g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.4);
+    o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+0.4);
+  }catch(e){}
+}
+
+init();
+</script>
+</body>
+</html>

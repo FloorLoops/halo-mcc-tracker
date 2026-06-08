@@ -163,7 +163,7 @@ public class MainActivity extends Activity {
     boolean xpBasis(){ return prefs.getBoolean("rankXp",true); }
     int rankPct(){ int[] t=count(null); int ap=t[0]==0?0:100*t[1]/t[0]; return xpBasis()?xpPct():ap; }
     // v1.2 focus mode: best gamerscore for least time among undone achievements
-    double focusScore(JSONObject o){ double h=parseHrs(o.optString("time","")); if(h<=0) h=0.4;
+    double focusScore(JSONObject o){ double h=estHrs(o); if(h<=0) h=0.4;
         double g=Math.max(o.optInt("gs"),5); double s=g/h;
         if(o.optBoolean("missable")) s*=1.3; String d=o.optString("diff","").toLowerCase();
         if(d.contains("easy")) s*=1.25; else if(d.contains("hard")||d.contains("legend")) s*=0.7; return s; }
@@ -239,7 +239,7 @@ public class MainActivity extends Activity {
             double[] est=timeLeft();
             tc.addView(text(fmtHours(est[0])+" remaining",20,GOLD,true));
             tc.addView(text(fmtHours(est[1])+" total campaign · "+fmtHours(est[1]-est[0])+" done",10.5f,T2,false));
-            tc.addView(text("rough estimate from per-achievement time tags (where known)",8.5f,T3,false));
+            tc.addView(text("difficulty-weighted estimate — LASO playlists & legendary runs counted heavy, not 1h each",8.5f,T3,false));
             col.addView(tc);
         }
 
@@ -316,8 +316,26 @@ public class MainActivity extends Activity {
             if(t.endsWith("m")) return Double.parseDouble(t.substring(0,t.length()-1))/60.0;
             if(t.contains("h")) return Double.parseDouble(t.substring(0,t.indexOf("h")));
         }catch(Exception e){} return 0; }
+    // v1.2.1 — difficulty/type-weighted hour estimate. Uses the explicit "time" tag when present,
+    // otherwise estimates from type + difficulty so a LASO playlist reads as 20h+, not a flat 0.4h.
+    double estHrs(JSONObject o){
+        double h=parseHrs(o.optString("time","")); if(h>0) return h;
+        String ty=o.optString("type","").toLowerCase(); String d=o.optString("diff","").toLowerCase();
+        double base=0.5;
+        if(ty.contains("laso")) base=20;
+        else if(ty.contains("legendary")) base=4;
+        else if(ty.contains("speed")) base=1.5;
+        else if(ty.contains("multiplayer")||ty.contains("firefight")||ty.contains("spartan_ops")) base=2.5;
+        else if(ty.contains("story")) base=1.2;
+        else if(ty.contains("skull")||ty.contains("terminal")||ty.contains("collectible")) base=0.6;
+        double mult=1.0;
+        if(d.contains("very hard")||d.contains("extreme")||d.contains("brutal")) mult=2.5;
+        else if(d.contains("hard")) mult=1.7;
+        else if(d.contains("medium")||d.contains("moderate")) mult=1.2;
+        else if(d.contains("easy")) mult=0.7;
+        return base*mult; }
     double[] timeLeft(){ double rem=0,tot=0;
-        for(JSONObject o:all){ double h=parseHrs(o.optString("time","")); if(h<=0) h=0.4;
+        for(JSONObject o:all){ double h=estHrs(o);
             tot+=h; if(!done.contains(o.optString("id"))) rem+=h; }
         return new double[]{rem,tot}; }
     String fmtHours(double h){ if(h>=1) return (h>=10?Math.round(h):Math.round(h*10)/10.0)+"h"; return Math.round(h*60)+"m"; }
@@ -616,7 +634,7 @@ public class MainActivity extends Activity {
             {"1","v1.0","Native app · ~690-achievement database (Halopedia) · real icons · guides"},
             {"1","v1.1.5","Xbox Live sync (+ unlock dates) · 100+ in-app achievements: animated banners, sounds, replay, app-rank, secrets · rank ladder · time-to-100% · per-type stats · in-app roadmap"},
             {"1","v1.2","XP-weighted ranking overhaul · choose rank style: MCC / Halo 3 / Reach · focus mode (best next targets) · smart breakdowns"},
-            {"0","v1.2.x","Exact-700 reconciliation (via Xbox sync) · smart weighted time-to-completion"},
+            {"1","v1.2.1","Exact-700 reconciliation (Xbox sync adds any missing achievements) · difficulty-weighted time-to-completion (LASO ≈ 20h+, not 1h)"},
             {"0","v1.2.5","Native UI glow-up (match the web version)"},
             {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass · in-app feedback button → emails floorloops@parliamentfour.com directly"},
             {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
@@ -636,7 +654,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.2.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
