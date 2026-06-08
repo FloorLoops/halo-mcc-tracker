@@ -21,6 +21,8 @@
 
 **UNSC Terminal** is a native Android tracker for 100%ing *Halo: The Master Chief Collection*. Full achievement database imported from Halopedia, real achievement art (greyed while locked, full color when unlocked), per-achievement guides, and Xbox Live sync.
 
+> 🎖️ *Design inspired by the old **Halo Waypoint** app* — the companion that tracked your career, service record, and challenges. This is a love-letter to that experience, reimagined as a completionist's tracker.
+
 🌐 **Web version:** [floorloops.github.io/halo-mcc-tracker](https://floorloops.github.io/halo-mcc-tracker/) · 📱 **Android:** grab the APK from [Releases](../../releases)
 
 ## ✨ Features
@@ -31,6 +33,7 @@
 - 📖 **GUIDES button on every achievement** — jump to its Halopedia page, TrueAchievements guide, or YouTube solutions
 - 🎖️ **UNSC rank ladder** — Recruit → Master Chief as your completion climbs
 - 📌 **Pins** · 🔎 **search** · 🏷️ **type filters** (story / skull / terminal / speed / LASO / legendary…) · ✅ ALL/TODO/DONE
+- 🏆 **100 in-app achievements** with animated unlock banners, sounds, and an app-rank that climbs as you earn them — plus hidden secrets to discover
 - ⏱️ **Session timer** with check-off counter
 - 💾 **Offline-first** — progress stored locally, one-tap clipboard backup, zero accounts, zero telemetry
 
@@ -48,9 +51,12 @@
 |---|---|---|
 | **v1.0** | Native app · 690-achievement database · real icons · Xbox Live sync · guide links | ✅ shipped |
 | **v1.1** | Icons fill their frame (crop-to-fit) · full UNSC rank ladder · estimated time-to-100% · per-type stats | ✅ shipped |
+| **v1.1.1** | **100 in-app achievements** (icons · animated unlock banners · sounds · app-rank) + hidden easter eggs + Halo Waypoint-inspired credit | ✅ shipped |
 | **v1.1.x** | Exact-700 reconciliation vs TrueAchievements (dedupe the 690→700) | 🔜 next |
 | **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · Halo 3 rank icons · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
+| **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |
 | **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass | planned |
+| **v1.3.5** | **Achievement artwork viewer** — tap to view the full high-res achievement art (requires scraping + bundling HQ image sets) | planned |
 | **v1.3.1** | Optimization & tweaks — full review pass, fix small issues + anything that slipped through | planned |
 | **v1.4** | Halo SFX (mutable) · animations & transitions | planned |
 | **v1.5** | Packaged notification sound · minor tweaks | planned |

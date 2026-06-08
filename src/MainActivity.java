@@ -32,6 +32,9 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.FrameLayout;
+import android.media.ToneGenerator;
+import android.media.AudioManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
@@ -47,6 +50,13 @@ import java.util.Set;
 
 public class MainActivity extends Activity {
     static final boolean PREMIUM = false; // public free build
+    java.util.List<String[]> METAS = new java.util.ArrayList<String[]>();
+    java.util.HashSet<String> metas = new java.util.HashSet<String>();
+    java.util.HashSet<String> visitedGames = new java.util.HashSet<String>();
+    java.util.HashMap<String,Integer> detailOpens = new java.util.HashMap<String,Integer>();
+    FrameLayout overlay;
+    int titleTaps=0, footerTaps=0, chipTaps=0; String chipLast="";
+    long lastCheckMs=0; String lastCheckedId=""; int checkBurst=0;
 
     static final int BG=0xFF0A0E13, BG2=0xFF0D1117, CARD=0xFF151C26, CARD2=0xFF1C2533, LINE=0xFF21303F;
     static final int CYAN=0xFF00B8E8, GREEN=0xFF39D353, GOLD=0xFFFFD54F, ORANGE=0xFFFF8A50, PURPLE=0xFFCE93D8;
@@ -89,11 +99,18 @@ public class MainActivity extends Activity {
         content.setLayoutParams(new LinearLayout.LayoutParams(-1,0,1f));
         root.addView(content);
         root.addView(buildNav());
-        setContentView(root);
-        show("home");
+        overlay=new FrameLayout(this);
+        overlay.addView(root,new FrameLayout.LayoutParams(-1,-1));
+        setContentView(overlay);
+        loadSet(metas,"metas"); loadCsv(visitedGames,"vgames"); addAllMetas();
+        int h=java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+        if(h>=3 && h<4) unlockMeta("egg_cryo");
+        show("home"); checkMetas();
     }
 
     void loadSet(Set<String> s,String key){ String v=prefs.getString(key,""); if(v.length()>0) for(String x:v.split(",")) s.add(x); }
+    void loadCsv(java.util.HashSet<String> s,String key){ String v=prefs.getString(key,""); if(v.length()>0) for(String x:v.split(",")) s.add(x); }
+    void saveCsv(java.util.HashSet<String> s,String key){ StringBuilder sb=new StringBuilder(); for(String x:s){ if(sb.length()>0) sb.append(','); sb.append(x);} prefs.edit().putString(key,sb.toString()).apply(); }
     void saveSet(Set<String> s,String key){ StringBuilder sb=new StringBuilder(); for(String x:s){ if(sb.length()>0) sb.append(','); sb.append(x);} prefs.edit().putString(key,sb.toString()).apply(); }
     void buzz(){ try{((Vibrator)getSystemService(Context.VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(16,140));}catch(Exception e){} }
     int dp(int v){ return (int)(v*getResources().getDisplayMetrics().density); }
@@ -126,7 +143,10 @@ public class MainActivity extends Activity {
     void restyleNav(){ String[] ids={"home","games","pins","more"};
         for(int i=0;i<4;i++) navBtns[i].setTextColor(ids[i].equals(tab)?CYAN:T3); }
 
-    void show(String t){ tab=t; restyleNav(); content.removeAllViews();
+    void show(String t){ tab=t; restyleNav();
+        if(sessionMin()>=45) unlockMeta("egg_endure");
+        checkMetas();
+        content.removeAllViews();
         if(t.equals("home")) content.addView(buildHome());
         else if(t.equals("games")) content.addView(buildGames());
         else if(t.equals("pins")) content.addView(buildPins());
@@ -137,7 +157,9 @@ public class MainActivity extends Activity {
         ScrollView sv=new ScrollView(this);
         LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
         col.setPadding(dp(14),dp(16),dp(14),dp(20)); sv.addView(col);
-        TextView title=text("⛨ UNSC TERMINAL",20,CYAN,true); title.setLetterSpacing(0.16f); col.addView(title);
+        final TextView title=text("⛨ UNSC TERMINAL",20,CYAN,true); title.setLetterSpacing(0.16f);
+        title.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(++titleTaps>=7){ titleTaps=0; unlockMeta("egg_bloom"); } } });
+        col.addView(title);
         col.addView(text("MCC ACHIEVEMENT DATABASE · CLASSIFIED",9.5f,T3,false));
 
         int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0];
@@ -184,9 +206,11 @@ public class MainActivity extends Activity {
             gc.addView(row);
             gc.addView(text(g.optString("year")+" · "+c[1]+"/"+c[0]+" · "+c[3]+"/"+c[2]+" G",10,T2,false));
             gc.addView(bar(gp,accent));
-            gc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ curGame=gid; show("games"); } });
+            gc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ curGame=gid; visitGame(gid); show("games"); } });
             col.addView(gc); }
-        TextView foot=text("\n◇ FOR PERSONAL GLORY ◇",9.5f,T3,false); foot.setGravity(Gravity.CENTER); col.addView(foot);
+        final TextView foot=text("\n◇ FOR PERSONAL GLORY ◇",9.5f,T3,false); foot.setGravity(Gravity.CENTER);
+        foot.setOnClickListener(new View.OnClickListener(){ long w=0; public void onClick(View v){ long now=System.currentTimeMillis(); if(now-w>1600){ footerTaps=0; } w=now; if(++footerTaps>=4 && pins.size()==4){ footerTaps=0; unlockMeta("egg_parliament"); } } });
+        col.addView(foot);
         return sv;
     }
 
@@ -236,7 +260,7 @@ public class MainActivity extends Activity {
             TextView ch=text(e.getValue().optString("name").replace("Halo: ","").replace("Halo ","H")+" "+(100*c[1]/c[0])+"%",12,on?CYAN:T2,on);
             ch.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,16)); ch.setPadding(dp(14),dp(8),dp(14),dp(8));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,-2); lp.rightMargin=dp(7); ch.setLayoutParams(lp);
-            ch.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ curGame=gid; show("games"); } });
+            ch.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(gid.equals(chipLast)){ if(++chipTaps>=7) unlockMeta("egg_madrigal"); } else { chipLast=gid; chipTaps=1; } curGame=gid; visitGame(gid); show("games"); } });
             chips.addView(ch); }
         col.addView(hs);
 
@@ -249,7 +273,7 @@ public class MainActivity extends Activity {
         search.addTextChangedListener(new TextWatcher(){
             public void beforeTextChanged(CharSequence s,int a,int b,int c){}
             public void onTextChanged(CharSequence s,int a,int b,int c){}
-            public void afterTextChanged(Editable s){ query=s.toString().toLowerCase(); if(adapter!=null) adapter.refilter(); } });
+            public void afterTextChanged(Editable s){ query=s.toString().toLowerCase(); if(adapter!=null) adapter.refilter(); if(query.length()>=2) unlockMeta("ftsearch"); } });
         col.addView(search);
 
         LinearLayout frow=new LinearLayout(this); frow.setOrientation(LinearLayout.HORIZONTAL);
@@ -297,6 +321,8 @@ public class MainActivity extends Activity {
 
     void showDetail(final AchAdapter ad,final JSONObject o){
         final String aid=o.optString("id");
+        { Integer c=detailOpens.get(aid); int n=(c==null?0:c)+1; detailOpens.put(aid,n); if(n>=5) unlockMeta("egg_iwhbyd"); }
+        if(o.optString("name").toLowerCase().contains("343 guilty spark")) unlockMeta("egg_343");
         String extra="Difficulty: "+o.optString("diff","—")+"   Time: "+o.optString("time","—")
             +"\nType: "+o.optString("type","—")+"   Mode: "+o.optString("mode","—")
             +(o.optString("mission","").length()>0?"\nMission: "+o.optString("mission"):"")
@@ -320,9 +346,12 @@ public class MainActivity extends Activity {
                 public void onClick(android.content.DialogInterface d,int w){
                     if(pins.contains(aid)) pins.remove(aid); else pins.add(aid);
                     saveSet(pins,"pins"); if(ad!=null) ad.refilter();
+                    if(pins.size()>=7) unlockMeta("egg_marathon"); checkMetas();
                     Toast.makeText(MainActivity.this,pins.contains(aid)?"📌 pinned":"unpinned",Toast.LENGTH_SHORT).show(); } })
             .setNegativeButton("CLOSE",null).show();
     }
+
+    void visitGame(String gid){ visitedGames.add(gid); saveCsv(visitedGames,"vgames"); int g=0; for(java.util.Map.Entry<String,JSONObject> e:games.entrySet()){ int[] c=count(e.getKey()); if(c[0]>0) g++; } if(visitedGames.size()>=g) unlockMeta("egg_library"); }
 
     /* ===== PINS ===== */
     View buildPins(){
@@ -402,18 +431,46 @@ public class MainActivity extends Activity {
             rr.addView(text(left==0?"✔ done":(tot-left)+"/"+tot,11.5f,left==0?GREEN:T2,false)); tyc.addView(rr); }
         col.addView(tyc); }
 
+        LinearLayout ac=card();
+        int unlocked=metas.size(), totalShown=METAS.size();
+        ac.addView(text("🏆 APP ACHIEVEMENTS",9.5f,T2,true));
+        ac.addView(text(unlocked+" / "+totalShown+"   ·   "+appRank(),16,GOLD,true));
+        ac.addView(text("secrets found: "+eggsFound()+" / "+EGG_IDS.length,10.5f,T2,false));
+        ac.addView(bar(totalShown==0?0:100*unlocked/totalShown,GOLD));
+        final LinearLayout grid=new LinearLayout(this); grid.setOrientation(LinearLayout.VERTICAL); grid.setVisibility(View.GONE);
+        LinearLayout.LayoutParams glp=new LinearLayout.LayoutParams(-1,-2); glp.topMargin=dp(8); grid.setLayoutParams(glp);
+        final TextView toggle=text("▸ show list",11,CYAN,true); toggle.setPadding(0,dp(8),0,0);
+        toggle.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
+            if(grid.getChildCount()==0){
+                for(String[] m:METAS){ boolean got=metas.contains(m[0]); boolean egg=m[1].equals("egg");
+                    if(m[0].equals("egg_parliament") && !got) continue;
+                    LinearLayout r=new LinearLayout(MainActivity.this); r.setOrientation(LinearLayout.HORIZONTAL); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(0,dp(5),0,dp(5));
+                    String ic=got?m[2]:(egg?"🔒":"🔘");
+                    TextView ti=text(ic,17,got?T1:T3,false); ti.setPadding(0,0,dp(10),0); r.addView(ti);
+                    LinearLayout cc=new LinearLayout(MainActivity.this); cc.setOrientation(LinearLayout.VERTICAL); cc.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
+                    String nm = got ? m[3] : (egg ? "??? (secret)" : m[3]);
+                    cc.addView(text(nm,12.5f,got?(egg?GOLD:T1):T3,got));
+                    if(got||!egg) cc.addView(text(got?m[4]:"locked",10,T3,false));
+                    r.addView(cc); r.addView(text(got?"✔":"",13,GREEN,true)); grid.addView(r); }
+                toggle.setText("▾ hide list"); grid.setVisibility(View.VISIBLE);
+            } else { boolean vis=grid.getVisibility()==View.VISIBLE; grid.setVisibility(vis?View.GONE:View.VISIBLE); toggle.setText(vis?"▸ show list":"▾ hide list"); }
+        } });
+        ac.addView(toggle); ac.addView(grid);
+        ac.addView(text("rank climbs as you unlock more — full XP-weighted overhaul in v1.2",8.5f,T3,false));
+        col.addView(ac);
+
         LinearLayout ex=card(); ex.addView(text("💾 DATA",9.5f,T2,true));
         TextView cp=text("COPY PROGRESS BACKUP",12,GREEN,true); cp.setBackground(box(CARD2,GREEN,6)); cp.setPadding(dp(14),dp(8),dp(14),dp(8));
         LinearLayout.LayoutParams clp=new LinearLayout.LayoutParams(-2,-2); clp.topMargin=dp(8); cp.setLayoutParams(clp);
         cp.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
             ClipboardManager cm=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
             cm.setPrimaryClip(ClipData.newPlainText("halo",prefs.getString("done","")));
-            Toast.makeText(MainActivity.this,"✓ progress copied — paste anywhere safe",Toast.LENGTH_SHORT).show(); } });
+            unlockMeta("ftback"); Toast.makeText(MainActivity.this,"✓ progress copied — paste anywhere safe",Toast.LENGTH_SHORT).show(); } });
         ex.addView(cp);
         ex.addView(text("Database: 690 achievements / 7,110G imported from Halopedia (live icons + wiki links). Exact-700 reconciliation vs TrueAchievements: next update.",9,T3,false));
         col.addView(ex);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1.x · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -490,9 +547,226 @@ public class MainActivity extends Activity {
             final int fm = matched; final String fe = err;
             runOnUiThread(new Runnable() { public void run() {
                 if (fe != null) { Toast.makeText(MainActivity.this, "sync failed: " + fe, Toast.LENGTH_LONG).show(); return; }
-                saveSet(done, "done");
+                saveSet(done, "done"); unlockMeta("ftsync");
                 Toast.makeText(MainActivity.this, "✔ Xbox sync: +" + fm + " unlocked", Toast.LENGTH_LONG).show();
                 show(tab); } });
+        } });
+    }
+
+
+    /* ===== in-app achievements ===== */
+    void metaDef(String id,String cond,String icon,String title,String desc,boolean secret){
+        METAS.add(new String[]{id,cond,icon,title,desc,secret?"1":"0"}); }
+    void addAllMetas(){
+        metaDef("d1","done:1","🩸","First Blood","1 achievements unlocked",false);
+        metaDef("d5","done:5","🥾","Boot Camp","5 achievements unlocked",false);
+        metaDef("d10","done:10","🔟","Double Digits","10 achievements unlocked",false);
+        metaDef("d25","done:25","📈","Making Progress","25 achievements unlocked",false);
+        metaDef("d50","done:50","🎯","Half-Centurion","50 achievements unlocked",false);
+        metaDef("d75","done:75","⛽","Three-Quarter","75 achievements unlocked",false);
+        metaDef("d100","done:100","💯","Centurion","100 achievements unlocked",false);
+        metaDef("d150","done:150","🎖️","Seasoned","150 achievements unlocked",false);
+        metaDef("d200","done:200","🪖","Veteran","200 achievements unlocked",false);
+        metaDef("d250","done:250","⚔️","Battle-Hardened","250 achievements unlocked",false);
+        metaDef("d300","done:300","🔥","Relentless","300 achievements unlocked",false);
+        metaDef("d400","done:400","🚀","Unstoppable","400 achievements unlocked",false);
+        metaDef("d450","done:450","🤖","The Machine","450 achievements unlocked",false);
+        metaDef("d500","done:500","🌟","Legend in Making","500 achievements unlocked",false);
+        metaDef("d600","done:600","🧗","Almost There","600 achievements unlocked",false);
+        metaDef("d650","done:650","🏁","Home Stretch","650 achievements unlocked",false);
+        metaDef("d690","done:690","👑","Completionist","690 achievements unlocked",false);
+        metaDef("gs250","gs:250","🪙","Pocket Change","250G earned",false);
+        metaDef("gs500","gs:500","💰","Coin Collector","500G earned",false);
+        metaDef("gs1000","gs:1000","🎮","GS Grinder","1000G earned",false);
+        metaDef("gs2000","gs:2000","🎯","Point Blank","2000G earned",false);
+        metaDef("gs3000","gs:3000","📊","Score Surge","3000G earned",false);
+        metaDef("gs4000","gs:4000","🎲","High Roller","4000G earned",false);
+        metaDef("gs5000","gs:5000","🎖️","GS General","5000G earned",false);
+        metaDef("gs6000","gs:6000","🔢","Number Cruncher","6000G earned",false);
+        metaDef("gs7000","gs:7000","🆙","Maxed Out","7000G earned",false);
+        metaDef("gs7110","gs:7110","🏆","Perfect Score","7110G earned",false);
+        metaDef("g1ce","g1:ce","🎬","First Step: CE","First achievement in CE",false);
+        metaDef("g1h2","g1:h2","🎬","First Step: Halo 2","First achievement in Halo 2",false);
+        metaDef("g1h3","g1:h3","🎬","First Step: Halo 3","First achievement in Halo 3",false);
+        metaDef("g1odst","g1:odst","🎬","First Step: ODST","First achievement in ODST",false);
+        metaDef("g1reach","g1:reach","🎬","First Step: Reach","First achievement in Reach",false);
+        metaDef("g1h4","g1:h4","🎬","First Step: Halo 4","First achievement in Halo 4",false);
+        metaDef("g1mcc","g1:mcc","🎬","First Step: MCC","First achievement in MCC",false);
+        metaDef("g100ce","g100:ce","🏅","CE Complete","100% of CE",false);
+        metaDef("g100h2","g100:h2","🏅","Halo 2 Complete","100% of Halo 2",false);
+        metaDef("g100h3","g100:h3","🏅","Halo 3 Complete","100% of Halo 3",false);
+        metaDef("g100odst","g100:odst","🏅","ODST Complete","100% of ODST",false);
+        metaDef("g100reach","g100:reach","🏅","Reach Complete","100% of Reach",false);
+        metaDef("g100h4","g100:h4","🏅","Halo 4 Complete","100% of Halo 4",false);
+        metaDef("g100mcc","g100:mcc","🏅","MCC Complete","100% of MCC",false);
+        metaDef("g50ce","g50:ce","▶️","CE Halfway","50% of CE",false);
+        metaDef("g50h2","g50:h2","▶️","Halo 2 Halfway","50% of Halo 2",false);
+        metaDef("g50h3","g50:h3","▶️","Halo 3 Halfway","50% of Halo 3",false);
+        metaDef("g50odst","g50:odst","▶️","ODST Halfway","50% of ODST",false);
+        metaDef("g50reach","g50:reach","▶️","Reach Halfway","50% of Reach",false);
+        metaDef("g50h4","g50:h4","▶️","Halo 4 Halfway","50% of Halo 4",false);
+        metaDef("g50mcc","g50:mcc","▶️","MCC Halfway","50% of MCC",false);
+        metaDef("tfstory","tf:story","📖","First Story","First Story achievement",false);
+        metaDef("tfskull","tf:skull","💀","First Skull","First Skull achievement",false);
+        metaDef("tfterminal","tf:terminal","📟","First Terminal","First Terminal achievement",false);
+        metaDef("tfspeed","tf:speed","⏱️","First Speed","First Speed achievement",false);
+        metaDef("tflegendary","tf:legendary","🔴","First Legendary","First Legendary achievement",false);
+        metaDef("tflaso","tf:laso","☠️","First LASO","First LASO achievement",false);
+        metaDef("tfmultiplayer","tf:multiplayer","🎮","First Multiplayer","First Multiplayer achievement",false);
+        metaDef("tffirefight","tf:firefight","🔫","First Firefight","First Firefight achievement",false);
+        metaDef("tfspartan_ops","tf:spartan_ops","🛰️","First Spartan Ops","First Spartan Ops achievement",false);
+        metaDef("tfcollectible","tf:collectible","🧩","First Collectible","First Collectible achievement",false);
+        metaDef("tastory","ta:story","📖","Story Master","All Story achievements",false);
+        metaDef("taskull","ta:skull","💀","Skull Master","All Skull achievements",false);
+        metaDef("taterminal","ta:terminal","📟","Terminal Master","All Terminal achievements",false);
+        metaDef("taspeed","ta:speed","⏱️","Speed Master","All Speed achievements",false);
+        metaDef("talegendary","ta:legendary","🔴","Legendary Master","All Legendary achievements",false);
+        metaDef("talaso","ta:laso","☠️","LASO Master","All LASO achievements",false);
+        metaDef("tamultiplayer","ta:multiplayer","🎮","Multiplayer Master","All Multiplayer achievements",false);
+        metaDef("tafirefight","ta:firefight","🔫","Firefight Master","All Firefight achievements",false);
+        metaDef("taspartan_ops","ta:spartan_ops","🛰️","Spartan Ops Master","All Spartan Ops achievements",false);
+        metaDef("tacollectible","ta:collectible","🧩","Collectible Master","All Collectible achievements",false);
+        metaDef("rk0","rank:0","🟫","Rank: Recruit","Reach 0%",false);
+        metaDef("rk10","rank:10","🔵","Rank: Private","Reach 10%",false);
+        metaDef("rk25","rank:25","🟡","Rank: Corporal","Reach 25%",false);
+        metaDef("rk40","rank:40","🟠","Rank: Sergeant","Reach 40%",false);
+        metaDef("rk55","rank:55","🔴","Rank: Staff Sergeant","Reach 55%",false);
+        metaDef("rk65","rank:65","🟣","Rank: Lieutenant","Reach 65%",false);
+        metaDef("rk75","rank:75","⚫","Rank: Captain","Reach 75%",false);
+        metaDef("rk85","rank:85","🪖","Rank: ODST Operative","Reach 85%",false);
+        metaDef("rk93","rank:93","🟢","Rank: Spartan","Reach 93%",false);
+        metaDef("rk99","rank:99","🌟","Rank: Noble Spartan","Reach 99%",false);
+        metaDef("rk100","rank:100","🎖️","Rank: Master Chief","Reach 100%",false);
+        metaDef("pin1","pins:1","📌","Pin It","Pin an achievement",false);
+        metaDef("pin5","pins:5","📌","Target List","Pin 5",false);
+        metaDef("pin10","pins:10","📌","Hit List","Pin 10",false);
+        metaDef("pin25","pins:25","📌","Master Strategist","Pin 25",false);
+        metaDef("ses10","sess:10","⏱️","Warming Up","10-min session",false);
+        metaDef("ses30","sess:30","🎯","In the Zone","30-min session",false);
+        metaDef("ses60","sess:60","🏃","Marathon Session","60-min session",false);
+        metaDef("ftsync","feat:sync","⚡","Linked Up","Sync with Xbox Live",false);
+        metaDef("ftback","feat:backup","💾","Safe Keeping","Back up progress",false);
+        metaDef("ftsearch","feat:search","🔎","Detective","Use search",false);
+        metaDef("egg_cryo","egg","❄️","Wake Me When You Need Me","???",true);
+        metaDef("egg_easy","egg","🗡️","Were It So Easy","???",true);
+        metaDef("egg_grunt","egg","🎉","Grunt Birthday Party","???",true);
+        metaDef("egg_iwhbyd","egg","😈","I Would Have Been Your Daddy","???",true);
+        metaDef("egg_marathon","egg","🏃","Marathon Man","???",true);
+        metaDef("egg_endure","egg","🛡️","Endure","???",true);
+        metaDef("egg_library","egg","📚","The Library","???",true);
+        metaDef("egg_madrigal","egg","🎵","Siege of Madrigal","???",true);
+        metaDef("egg_343","egg","💡","343 Guilty Spark","???",true);
+        metaDef("egg_bloom","egg","🌸","Bloom","???",true);
+        metaDef("egg_parliament","egg","🦉","A Parliament of Four","???",true);
+    }
+    String[] metaById(String id){ for(String[] m:METAS) if(m[0].equals(id)) return m; return null; }
+    int gsDone(){ int g=0; for(JSONObject o:all) if(done.contains(o.optString("id"))) g+=o.optInt("gs"); return g; }
+    int[] gameDoneCount(String gid){ int n=0,d=0; for(JSONObject o:all) if(gid.equals(o.optString("game"))){ n++; if(done.contains(o.optString("id"))) d++; } return new int[]{d,n}; }
+    int[] typeDoneCount(String ty){ int n=0,d=0; for(JSONObject o:all) if(ty.equals(o.optString("type"))){ n++; if(done.contains(o.optString("id"))) d++; } return new int[]{d,n}; }
+    long sessionMin(){ if(sessionBase<=0) return 0; return (SystemClock.elapsedRealtime()-sessionBase)/60000; }
+
+    boolean condMet(String cond){
+        try{
+            String[] p=cond.split(":"); String k=p[0];
+            if(k.equals("done")) return done.size()>=Integer.parseInt(p[1]);
+            if(k.equals("gs")) return gsDone()>=Integer.parseInt(p[1]);
+            if(k.equals("g1")){ int[] c=gameDoneCount(p[1]); return c[0]>=1; }
+            if(k.equals("g100")){ int[] c=gameDoneCount(p[1]); return c[1]>0 && c[0]>=c[1]; }
+            if(k.equals("g50")){ int[] c=gameDoneCount(p[1]); return c[1]>0 && c[0]*2>=c[1]; }
+            if(k.equals("tf")){ int[] c=typeDoneCount(p[1]); return c[0]>=1; }
+            if(k.equals("ta")){ int[] c=typeDoneCount(p[1]); return c[1]>0 && c[0]>=c[1]; }
+            if(k.equals("rank")){ int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0]; return pct>=Integer.parseInt(p[1]); }
+            if(k.equals("pins")) return pins.size()>=Integer.parseInt(p[1]);
+            if(k.equals("sess")) return sessionMin()>=Integer.parseInt(p[1]);
+        }catch(Exception e){}
+        return false;
+    }
+    void checkMetas(){
+        for(String[] m:METAS){ String cond=m[1];
+            if(cond.equals("egg")||cond.startsWith("feat")) continue;
+            if(!metas.contains(m[0]) && condMet(cond)) unlockMeta(m[0]); }
+    }
+    void unlockMeta(String id){
+        if(metas.contains(id)) return; String[] m=metaById(id); if(m==null) return;
+        metas.add(id); saveSet(metas,"metas");
+        boolean egg = m[1].equals("egg");
+        playUnlock(egg); buzz();
+        showAchievementBanner(m[2],m[3],egg);
+        if(egg){ flash(); if(allEggsFound()) megaCelebration(); }
+    }
+    static final String[] EGG_IDS={"egg_cryo","egg_easy","egg_grunt","egg_iwhbyd","egg_marathon","egg_endure","egg_library","egg_madrigal","egg_343","egg_bloom","egg_parliament"};
+    boolean allEggsFound(){ for(String e:EGG_IDS) if(!metas.contains(e)) return false; return true; }
+    int eggsFound(){ int n=0; for(String e:EGG_IDS) if(metas.contains(e)) n++; return n; }
+    void megaCelebration(){
+        runOnUiThread(new Runnable(){ public void run(){
+            final FrameLayout fx=new FrameLayout(MainActivity.this); fx.setBackgroundColor(0xCC0A0E13);
+            overlay.addView(fx,new FrameLayout.LayoutParams(-1,-1));
+            final String[] emo={"🎉","🎆","🛡️","🎖️","⭐","💥","🦉","☠️","💀","🚀","🔥","👑"};
+            final java.util.Random rnd=new java.util.Random();
+            final int W=getResources().getDisplayMetrics().widthPixels;
+            final int H=getResources().getDisplayMetrics().heightPixels;
+            for(int i=0;i<48;i++){ TextView e=text(emo[rnd.nextInt(emo.length)],22+rnd.nextInt(26),T1,false);
+                FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(-2,-2); lp.leftMargin=rnd.nextInt(W); lp.topMargin=-100-rnd.nextInt(400); e.setLayoutParams(lp);
+                fx.addView(e); e.animate().translationY(H+300).rotationBy(rnd.nextInt(720)-360).setDuration(1800+rnd.nextInt(1600)).setStartDelay(rnd.nextInt(700)).start(); }
+            LinearLayout card=new LinearLayout(MainActivity.this); card.setOrientation(LinearLayout.VERTICAL); card.setGravity(Gravity.CENTER);
+            card.setBackground(box(0xFF0D1117,GOLD,14)); card.setPadding(dp(26),dp(24),dp(26),dp(24));
+            FrameLayout.LayoutParams clp=new FrameLayout.LayoutParams(-2,-2); clp.gravity=Gravity.CENTER; clp.leftMargin=dp(24); clp.rightMargin=dp(24); card.setLayoutParams(clp);
+            card.addView(textC("🦉🛡️🎖️",40)); card.addView(textC("ALL SECRETS FOUND",18,GOLD,true));
+            card.addView(textC("You found every easter egg.",13,T1,false));
+            card.addView(textC("\nThe Parliament salutes you.\nWere it so easy.",11,T2,false));
+            card.setAlpha(0f); card.setScaleX(0.6f); card.setScaleY(0.6f);
+            fx.addView(card); card.animate().alpha(1f).scaleX(1f).scaleY(1f).setStartDelay(400).setDuration(600).start();
+            playUnlock(true);
+            fx.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ overlay.removeView(fx); } });
+            fx.postDelayed(new Runnable(){ public void run(){ try{ overlay.removeView(fx); }catch(Exception e){} } }, 7000);
+        } });
+    }
+    TextView textC(String s,float sz){ return textC(s,sz,T1,false); }
+    TextView textC(String s,float sz,int c,boolean b){ TextView t=text(s,sz,c,b); t.setGravity(Gravity.CENTER); LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.topMargin=dp(4); t.setLayoutParams(lp); return t; }
+    String appRank(){
+        int n=metas.size();
+        if(n>=100) return "🎖️ Reclaimer";
+        if(n>=80) return "🌟 Mythic";
+        if(n>=60) return "🟢 Spartan";
+        if(n>=40) return "🪖 ODST";
+        if(n>=25) return "⚫ Captain";
+        if(n>=12) return "🟠 Sergeant";
+        if(n>=5) return "🔵 Private";
+        return "🟫 Recruit";
+    }
+
+    void playUnlock(final boolean egg){
+        POOL.execute(new Runnable(){ public void run(){ try{
+            ToneGenerator tg=new ToneGenerator(AudioManager.STREAM_MUSIC,90);
+            if(egg){ tg.startTone(ToneGenerator.TONE_PROP_BEEP,120); Thread.sleep(140);
+                tg.startTone(ToneGenerator.TONE_PROP_BEEP2,160); Thread.sleep(180);
+                tg.startTone(ToneGenerator.TONE_CDMA_HIGH_L,220); Thread.sleep(260); }
+            else { tg.startTone(ToneGenerator.TONE_PROP_ACK,140); Thread.sleep(160); }
+            tg.release();
+        }catch(Exception e){} } });
+    }
+    void flash(){
+        runOnUiThread(new Runnable(){ public void run(){
+            final View f=new View(MainActivity.this); f.setBackgroundColor(0x5500B8E8);
+            overlay.addView(f,new FrameLayout.LayoutParams(-1,-1));
+            f.animate().alpha(0f).setDuration(650).withEndAction(new Runnable(){ public void run(){ overlay.removeView(f); } }).start();
+        } });
+    }
+    void showAchievementBanner(final String icon,final String title,final boolean egg){
+        runOnUiThread(new Runnable(){ public void run(){
+            LinearLayout b=new LinearLayout(MainActivity.this); b.setOrientation(LinearLayout.HORIZONTAL); b.setGravity(Gravity.CENTER_VERTICAL);
+            b.setBackground(box(0xFF0D1117, egg?GOLD:CYAN, 10)); b.setPadding(dp(14),dp(12),dp(16),dp(12));
+            TextView ic=text(icon,26,T1,false); ic.setPadding(0,0,dp(14),0); b.addView(ic);
+            LinearLayout c=new LinearLayout(MainActivity.this); c.setOrientation(LinearLayout.VERTICAL);
+            c.addView(text(egg?"✦ SECRET UNLOCKED":"ACHIEVEMENT UNLOCKED",9.5f,egg?GOLD:CYAN,true));
+            c.addView(text(title,15,T1,true)); b.addView(c);
+            FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(-2,-2); lp.gravity=Gravity.TOP|Gravity.CENTER_HORIZONTAL; lp.topMargin=dp(38); lp.leftMargin=dp(14); lp.rightMargin=dp(14);
+            b.setLayoutParams(lp); b.setTranslationY(dp(-160)); b.setAlpha(0f);
+            overlay.addView(b);
+            b.animate().translationY(0).alpha(1f).setDuration(420).start();
+            b.postDelayed(new Runnable(){ public void run(){
+                b.animate().translationY(dp(-160)).alpha(0f).setDuration(380).withEndAction(new Runnable(){ public void run(){ overlay.removeView(b); } }).start();
+            } }, egg?3200:2400);
         } });
     }
 
