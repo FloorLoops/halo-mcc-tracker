@@ -53,7 +53,8 @@
 | **v1.4** | Packaged notification sound · minor tweaks | planned |
 | **v1.5** | Home-screen widgets · ranking system overhaul with **Halo 3 rank icons** | planned |
 | **v1.6** | Per-achievement written walkthroughs · direct solution videos · path/collectible screenshots (skulls, terminals) | planned |
-| **v1.7** | Optimal completion-order engine + least-pain LASO routing | planned |
+| **v1.7** | **General tips & pointers** — practical hints blended from YouTube, Halopedia & TrueAchievements (e.g. "if the wall-glitch isn't working, try this angle") | planned |
+| **v1.8** | Optimal completion-order engine + least-pain LASO routing | planned |
 | **v2.0** | Generic **"100% Checklist"** edition for Google Play (original branding) | planned |
 
 ## 🏗️ Building
