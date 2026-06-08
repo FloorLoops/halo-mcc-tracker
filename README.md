@@ -5,7 +5,7 @@
 
 *Every achievement. Every game. One terminal.*
 
-![version](https://img.shields.io/badge/version-1.1-5c8a3a?style=for-the-badge)
+![version](https://img.shields.io/badge/version-1.1.5-5c8a3a?style=for-the-badge)
 ![platform](https://img.shields.io/badge/Android%20·%20native-2d5a87?style=for-the-badge)
 ![database](https://img.shields.io/badge/database-690%20·%207110G-d4a017?style=for-the-badge)
 ![sync](https://img.shields.io/badge/Xbox%20Live-sync-107c10?style=for-the-badge)
@@ -41,7 +41,7 @@
 
 | Channel | What you get |
 |---|---|
-| [**Releases**](../../releases) | `UNSCTerminal-v1.1.apk` — native Android app (sideload) |
+| [**Releases**](../../releases) | `UNSCTerminal-v1.1.5.apk` — native Android app (sideload) |
 | [**Web**](https://floorloops.github.io/halo-mcc-tracker/) | Browser version — desktop-friendly, same database lineage |
 | `src/` | Full source — single-file Java, zero dependencies, no-Gradle build |
 
@@ -54,6 +54,8 @@
 | **v1.1.1** | **100 in-app achievements** (icons · animated unlock banners · sounds · app-rank) + hidden easter eggs + Halo Waypoint-inspired credit | ✅ shipped |
 | **v1.1.2** | In-app roadmap · Xbox sync no longer storms 100 unlock banners · 101 achievements with how-to-unlock descriptions + a "find all secrets" meta-achievement | ✅ shipped |
 | **v1.1.3** | "What's New" update-review screen (new content reconciles silently, then a single summary) · Grunt API key field (get ahead of v1.3 career stats) | ✅ shipped |
+| **v1.1.4** | Achievement list shows each one's unlock requirement (not just "locked") · **unlock date/time captured from Xbox sync** (shown in achievement details) | ✅ shipped |
+| **v1.1.5** | Tap any unlocked achievement to **replay its unlock animation/toast** — final polish before the v1.2 overhaul | ✅ shipped |
 | **v1.1.x** | Exact-700 reconciliation vs TrueAchievements (dedupe the 690→700) · **smart weighted time-to-completion** (difficulty-aware — a LASO playlist is 20+ hrs, not 1; weight by type/skull-stacking/legendary, not a flat per-achievement guess) | 🔜 next |
 | **v1.2** | **Overhauled ranking** (XP-weighted — harder achievements earn more experience, not flat %) · Halo 3 rank icons · **smart breakdowns & focus mode**: categorize by easter egg / vehicle-focus / long vs short mission · show every achievement within a mission · mission-map view · *"what can I knock out in this exact mission/mode right now?"* | planned |
 | **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |

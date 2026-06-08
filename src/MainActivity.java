@@ -58,6 +58,7 @@ public class MainActivity extends Activity {
     int titleTaps=0, footerTaps=0, chipTaps=0; String chipLast="";
     long lastCheckMs=0; String lastCheckedId=""; int checkBurst=0;
     boolean bulkUnlock=false;
+    java.util.HashMap<String,String> unlockTimes = new java.util.HashMap<String,String>();
 
     static final int BG=0xFF0A0E13, BG2=0xFF0D1117, CARD=0xFF151C26, CARD2=0xFF1C2533, LINE=0xFF21303F;
     static final int CYAN=0xFF00B8E8, GREEN=0xFF39D353, GOLD=0xFFFFD54F, ORANGE=0xFFFF8A50, PURPLE=0xFFCE93D8;
@@ -104,6 +105,7 @@ public class MainActivity extends Activity {
         overlay.addView(root,new FrameLayout.LayoutParams(-1,-1));
         setContentView(overlay);
         loadSet(metas,"metas"); loadCsv(visitedGames,"vgames"); addAllMetas();
+        try{ JSONObject ut=new JSONObject(prefs.getString("ut","{}")); java.util.Iterator<String> it=ut.keys(); while(it.hasNext()){ String k=it.next(); unlockTimes.put(k,ut.optString(k)); } }catch(Exception e){}
         int h=java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
         if(h>=3 && h<4) unlockMeta("egg_cryo");
         String lastVer=prefs.getString("lastVer",""); String curVer=appVer();
@@ -333,7 +335,8 @@ public class MainActivity extends Activity {
         String extra="Difficulty: "+o.optString("diff","—")+"   Time: "+o.optString("time","—")
             +"\nType: "+o.optString("type","—")+"   Mode: "+o.optString("mode","—")
             +(o.optString("mission","").length()>0?"\nMission: "+o.optString("mission"):"")
-            +(o.optBoolean("missable")?"\n⚠ MISSABLE":"")+(o.optBoolean("coop")?"\n👥 CO-OP friendly":"");
+            +(o.optBoolean("missable")?"\n⚠ MISSABLE":"")+(o.optBoolean("coop")?"\n👥 CO-OP friendly":"")
+            +(unlockTimes.containsKey(aid)?"\n🕒 Unlocked: "+fmtDate(unlockTimes.get(aid)):"");
         new AlertDialog.Builder(this)
             .setTitle(o.optString("icon")+" "+o.optString("name")+" · "+o.optInt("gs")+"G")
             .setMessage(o.optString("desc")+"\n\n📖 GUIDE\n"+o.optString("guide","No guide yet.")+"\n\n"+extra)
@@ -471,13 +474,15 @@ public class MainActivity extends Activity {
                     LinearLayout cc=new LinearLayout(MainActivity.this); cc.setOrientation(LinearLayout.VERTICAL); cc.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
                     String nm = got ? m[3] : (egg ? "??? (secret)" : m[3]);
                     cc.addView(text(nm,12.5f,got?(egg?GOLD:T1):T3,got));
-                    if(got||!egg) cc.addView(text(got?m[4]:"locked",10,T3,false));
-                    r.addView(cc); r.addView(text(got?"✔":"",13,GREEN,true)); grid.addView(r); }
+                    if(got||!egg) cc.addView(text(egg&&!got?"hidden — keep playing":m[4],10,got?T3:T2,false));
+                    r.addView(cc); r.addView(text(got?"▶":"",13,got?CYAN:GREEN,true));
+                    if(got){ final String[] mm=m; r.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ replayMeta(mm); } }); }
+                    grid.addView(r); }
                 toggle.setText("▾ hide list"); grid.setVisibility(View.VISIBLE);
             } else { boolean vis=grid.getVisibility()==View.VISIBLE; grid.setVisibility(vis?View.GONE:View.VISIBLE); toggle.setText(vis?"▸ show list":"▾ hide list"); }
         } });
         ac.addView(toggle); ac.addView(grid);
-        ac.addView(text("rank climbs as you unlock more — full XP-weighted overhaul in v1.2",8.5f,T3,false));
+        ac.addView(text("tap any unlocked achievement to replay its unlock · rank climbs as you earn more (XP overhaul in v1.2)",8.5f,T3,false));
         col.addView(ac);
 
         LinearLayout ex=card(); ex.addView(text("💾 DATA",9.5f,T2,true));
@@ -518,7 +523,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.1.3 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.1.5 · native (final pre-v1.2)\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -587,7 +592,12 @@ public class MainActivity extends Activity {
                             String st = a.optString("progressState");
                             if (!"Achieved".equalsIgnoreCase(st)) continue;
                             String id = byName.get(a.optString("name").trim().toLowerCase());
-                            if (id != null && !done.contains(id)) { done.add(id); matched++; }
+                            if (id != null) {
+                                String tu = a.optString("timeUnlocked","");
+                                if (tu.length()==0) { JSONObject pg=a.optJSONObject("progression"); if(pg!=null) tu=pg.optString("timeUnlocked",""); }
+                                if (tu.length()>0) unlockTimes.put(id, tu);
+                                if (!done.contains(id)) { done.add(id); matched++; }
+                            }
                         }
                     }
                 }
@@ -595,6 +605,7 @@ public class MainActivity extends Activity {
             final int fm = matched; final String fe = err;
             runOnUiThread(new Runnable() { public void run() {
                 if (fe != null) { Toast.makeText(MainActivity.this, "sync failed: " + fe, Toast.LENGTH_LONG).show(); return; }
+                try{ JSONObject ut=new JSONObject(); for(java.util.Map.Entry<String,String> e:unlockTimes.entrySet()) ut.put(e.getKey(),e.getValue()); prefs.edit().putString("ut",ut.toString()).apply(); }catch(Exception e){}
                 bulkUnlock=true; saveSet(done, "done");
                 int beforeM=metas.size(); unlockMeta("ftsync"); checkMetas(); bulkUnlock=false;
                 int gainedM=metas.size()-beforeM;
@@ -824,8 +835,15 @@ public class MainActivity extends Activity {
         } });
     }
 
+    String fmtDate(String iso){ try{ if(iso==null||iso.length()<10) return iso; String d=iso.substring(0,10); String t=iso.length()>=16?iso.substring(11,16):""; return d+(t.length()>0?" "+t:""); }catch(Exception e){ return iso; } }
     String appVer(){ try{ return getPackageManager().getPackageInfo(getPackageName(),0).versionName; }catch(Exception e){ return "?"; } }
 
+    void replayMeta(String[] m){
+        if(m[0].equals("meta_king")){ grandUnlock(m[2],m[3],"You own this. The Parliament bows."); return; }
+        if(m[0].equals("meta_allsecrets")||allEggsFound()&&false){ }
+        boolean egg=m[1].equals("egg");
+        showAchievementBanner(m[2],m[3],egg); playUnlock(egg); buzz(); if(egg) flash();
+    }
     void grandUnlock(final String icon,final String title,final String sub){
         runOnUiThread(new Runnable(){ public void run(){
             final FrameLayout fx=new FrameLayout(MainActivity.this); fx.setBackgroundColor(0xDD0A0E13);
@@ -853,7 +871,7 @@ public class MainActivity extends Activity {
         String msg = "Updated to v"+toV+".\n\n";
         if(gained>0) msg += "While you were away, "+gained+" new app achievement"+(gained==1?"":"s")+" were added that you ALREADY qualify for — they\u2019ve been unlocked silently (no banner spam).\n\n";
         else msg += "New content may be live.\n\n";
-        msg += "Take a moment: More \u2192 \ud83c\udfc6 App Achievements to review everything new.";
+        msg += "Take a moment: More \u2192 \ud83c\udfc6 App Achievements to review everything new — tap any unlocked one to REPLAY its unlock animation.";
         new AlertDialog.Builder(this).setTitle("\u2728 What\u2019s New").setMessage(msg).setPositiveButton("REVIEW LATER",null).show();
     }
 
