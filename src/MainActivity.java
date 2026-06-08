@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -152,7 +154,7 @@ public class MainActivity extends Activity {
         oc.addView(text(t[1]+" / "+t[0]+"  ·  "+pct+"%",23,GREEN,true));
         oc.addView(text("GAMERSCORE  "+t[3]+" / "+t[2]+" G",12,GOLD,false));
         oc.addView(bar(pct,GREEN));
-        oc.addView(text("database v1 · full ~700-achievement import: next update",8.5f,T3,false));
+        oc.addView(text("official database · 690 achievements · Halopedia import",8.5f,T3,false));
         col.addView(oc);
 
         for(Map.Entry<String,JSONObject> e:games.entrySet()){
@@ -252,6 +254,18 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle(o.optString("icon")+" "+o.optString("name")+" · "+o.optInt("gs")+"G")
             .setMessage(o.optString("desc")+"\n\n📖 GUIDE\n"+o.optString("guide","No guide yet.")+"\n\n"+extra)
+            .setNeutralButton("GUIDES ▸",new android.content.DialogInterface.OnClickListener(){
+                public void onClick(android.content.DialogInterface d,int w){
+                    final String[] opts={"📚 Halopedia page","🏆 TrueAchievements","▶️ YouTube solutions"};
+                    new AlertDialog.Builder(MainActivity.this).setTitle(o.optString("name"))
+                        .setItems(opts,new android.content.DialogInterface.OnClickListener(){
+                            public void onClick(android.content.DialogInterface dd,int which){
+                                String u;
+                                if(which==0) u=o.optString("wiki","https://www.halopedia.org");
+                                else if(which==1) u="https://www.trueachievements.com/searchresults.aspx?search="+java.net.URLEncoder.encode(o.optString("name"));
+                                else u="https://www.youtube.com/results?search_query="+java.net.URLEncoder.encode("Halo MCC "+o.optString("name")+" achievement guide");
+                                try{ startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(u))); }catch(Exception e){}
+                            } }).show(); } })
             .setPositiveButton(pins.contains(aid)?"UNPIN 📌":"PIN 📌",new android.content.DialogInterface.OnClickListener(){
                 public void onClick(android.content.DialogInterface d,int w){
                     if(pins.contains(aid)) pins.remove(aid); else pins.add(aid);
@@ -310,8 +324,14 @@ public class MainActivity extends Activity {
         save.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
             prefs.edit().putString("xblKey",key.getText().toString().trim()).apply();
             Toast.makeText(MainActivity.this,"✓ key saved — live sync ships in v2.1",Toast.LENGTH_SHORT).show(); } });
-        xs.addView(save);
-        xs.addView(text("Pulls your real unlock state from Xbox Live. Sync engine lands in v2.1.",9,T3,false));
+        LinearLayout xrow=new LinearLayout(this); xrow.setOrientation(LinearLayout.HORIZONTAL);
+        xrow.addView(save);
+        TextView syncB=text("⚡ SYNC NOW",12,GOLD,true); syncB.setBackground(box(CARD2,GOLD,6)); syncB.setPadding(dp(18),dp(8),dp(18),dp(8));
+        LinearLayout.LayoutParams xlp=new LinearLayout.LayoutParams(-2,-2); xlp.topMargin=dp(8); xlp.leftMargin=dp(8); syncB.setLayoutParams(xlp);
+        syncB.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
+            prefs.edit().putString("xblKey",key.getText().toString().trim()).apply(); xboxSync(); } });
+        xrow.addView(syncB); xs.addView(xrow);
+        xs.addView(text("Pulls your real unlock state from Xbox Live via OpenXBL (free key at xbl.io). Matches by achievement name.",9,T3,false));
         col.addView(xs);
 
         int[] t=count(null);
@@ -330,7 +350,7 @@ public class MainActivity extends Activity {
             cm.setPrimaryClip(ClipData.newPlainText("halo",prefs.getString("done","")));
             Toast.makeText(MainActivity.this,"✓ progress copied — paste anywhere safe",Toast.LENGTH_SHORT).show(); } });
         ex.addView(cp);
-        ex.addView(text("Database v1: 283 tracked (campaign-focused). Full ~700-achievement MCC import ships with Xbox sync in v2.1.",9,T3,false));
+        ex.addView(text("Database: 690 achievements / 7,110G imported from Halopedia (live icons + wiki links). Exact-700 reconciliation vs TrueAchievements: next update.",9,T3,false));
         col.addView(ex);
 
         TextView ab=text("\nUNSC TERMINAL v2.0 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
@@ -339,6 +359,82 @@ public class MainActivity extends Activity {
     }
     int countFlag(String f){ int n=0; for(JSONObject o:all) if(o.optBoolean(f)&&!done.contains(o.optString("id"))) n++; return n; }
     int countType(String ty){ int n=0; for(JSONObject o:all) if(ty.equals(o.optString("type"))&&!done.contains(o.optString("id"))) n++; return n; }
+
+
+    /* ===== icon loader ===== */
+    static final java.util.concurrent.ExecutorService POOL = java.util.concurrent.Executors.newFixedThreadPool(4);
+    final java.util.HashMap<String, android.graphics.Bitmap> memCache = new java.util.HashMap<String, android.graphics.Bitmap>();
+    void loadIcon(final String url, final android.widget.ImageView iv) {
+        iv.setTag(url);
+        android.graphics.Bitmap c = memCache.get(url);
+        if (c != null) { iv.setImageBitmap(c); return; }
+        iv.setImageBitmap(null);
+        POOL.execute(new Runnable() { public void run() {
+            try {
+                String fn = "ic_" + Integer.toHexString(url.hashCode());
+                java.io.File f = new java.io.File(getCacheDir(), fn);
+                android.graphics.Bitmap bm = null;
+                if (f.exists() && f.length() > 0) bm = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+                if (bm == null) {
+                    java.net.HttpURLConnection c2 = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                    c2.setConnectTimeout(8000); c2.setReadTimeout(10000);
+                    c2.setRequestProperty("User-Agent", "UNSC-Terminal-personal/1.0");
+                    java.io.InputStream in = c2.getInputStream();
+                    java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
+                    byte[] b = new byte[8192]; int r;
+                    while ((r = in.read(b)) > 0) fo.write(b, 0, r);
+                    fo.close(); in.close();
+                    bm = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+                }
+                final android.graphics.Bitmap fb = bm;
+                if (fb != null) runOnUiThread(new Runnable() { public void run() {
+                    memCache.put(url, fb);
+                    if (url.equals(iv.getTag())) iv.setImageBitmap(fb); } });
+            } catch (Exception e) {}
+        } });
+    }
+
+    /* ===== xbox live sync (OpenXBL) ===== */
+    void xboxSync() {
+        final String key = prefs.getString("xblKey", "");
+        if (key.length() == 0) { Toast.makeText(this, "save an OpenXBL key first (xbl.io)", Toast.LENGTH_SHORT).show(); return; }
+        Toast.makeText(this, "⚡ syncing with Xbox Live…", Toast.LENGTH_SHORT).show();
+        POOL.execute(new Runnable() { public void run() {
+            int matched = 0; String err = null;
+            try {
+                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL("https://xbl.io/api/v2/achievements/title/717072975").openConnection();
+                c.setConnectTimeout(10000); c.setReadTimeout(20000);
+                c.setRequestProperty("X-Authorization", key);
+                c.setRequestProperty("Accept", "application/json");
+                java.io.InputStream in = c.getResponseCode() < 400 ? c.getInputStream() : c.getErrorStream();
+                ByteArrayOutputStream bo = new ByteArrayOutputStream(); byte[] b = new byte[8192]; int r;
+                while ((r = in.read(b)) > 0) bo.write(b, 0, r); in.close();
+                if (c.getResponseCode() >= 400) { err = "HTTP " + c.getResponseCode(); }
+                else {
+                    JSONObject root = new JSONObject(new String(bo.toByteArray(), StandardCharsets.UTF_8));
+                    JSONArray arr = root.optJSONArray("achievements");
+                    if (arr == null) err = "no achievements in response — key OK?";
+                    else {
+                        java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
+                        for (JSONObject o : all) byName.put(o.optString("name").trim().toLowerCase(), o.optString("id"));
+                        for (int i = 0; i < arr.length(); i++) {
+                            JSONObject a = arr.getJSONObject(i);
+                            String st = a.optString("progressState");
+                            if (!"Achieved".equalsIgnoreCase(st)) continue;
+                            String id = byName.get(a.optString("name").trim().toLowerCase());
+                            if (id != null && !done.contains(id)) { done.add(id); matched++; }
+                        }
+                    }
+                }
+            } catch (Exception e) { err = String.valueOf(e); }
+            final int fm = matched; final String fe = err;
+            runOnUiThread(new Runnable() { public void run() {
+                if (fe != null) { Toast.makeText(MainActivity.this, "sync failed: " + fe, Toast.LENGTH_LONG).show(); return; }
+                saveSet(done, "done");
+                Toast.makeText(MainActivity.this, "✔ Xbox sync: +" + fm + " unlocked", Toast.LENGTH_LONG).show();
+                show(tab); } });
+        } });
+    }
 
     /* ===== adapter ===== */
     class AchAdapter extends BaseAdapter {
@@ -364,21 +460,24 @@ public class MainActivity extends Activity {
         public View getView(int pos,View cv,ViewGroup parent){
             JSONObject o=items.get(pos);
             boolean d=done.contains(o.optString("id"));
-            LinearLayout row; TextView chk,nm,ds,gs;
+            LinearLayout row; TextView chk,nm,ds,gs; android.widget.ImageView img;
             if(cv instanceof LinearLayout && cv.getTag()!=null){
                 row=(LinearLayout)cv; View[] h=(View[])cv.getTag();
-                chk=(TextView)h[0]; nm=(TextView)h[1]; ds=(TextView)h[2]; gs=(TextView)h[3];
+                chk=(TextView)h[0]; nm=(TextView)h[1]; ds=(TextView)h[2]; gs=(TextView)h[3]; img=(android.widget.ImageView)h[4];
             } else {
                 row=new LinearLayout(MainActivity.this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
-                row.setPadding(dp(12),dp(11),dp(12),dp(11));
-                chk=text("",18,T3,true); chk.setPadding(0,0,dp(12),0); row.addView(chk);
+                row.setPadding(dp(10),dp(9),dp(12),dp(9));
+                chk=text("",17,T3,true); chk.setPadding(0,0,dp(8),0); row.addView(chk);
+                img=new android.widget.ImageView(MainActivity.this);
+                LinearLayout.LayoutParams ilp=new LinearLayout.LayoutParams(dp(44),dp(44)); ilp.rightMargin=dp(10);
+                img.setLayoutParams(ilp); img.setBackground(box(BG2,LINE,5)); row.addView(img);
                 LinearLayout mid=new LinearLayout(MainActivity.this); mid.setOrientation(LinearLayout.VERTICAL);
                 mid.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
                 nm=text("",13.5f,T1,true); mid.addView(nm);
                 ds=text("",11,T2,false); mid.addView(ds);
                 row.addView(mid);
                 gs=text("",12.5f,GOLD,true); gs.setPadding(dp(10),0,0,0); row.addView(gs);
-                row.setTag(new View[]{chk,nm,ds,gs});
+                row.setTag(new View[]{chk,nm,ds,gs,img});
             }
             row.setBackground(box(d?0xFF11231A:CARD,d?0xFF1E4D2E:LINE,7));
             chk.setText(d?"✔":"☐"); chk.setTextColor(d?GREEN:T3);
@@ -388,6 +487,14 @@ public class MainActivity extends Activity {
             nm.setText(o.optString("icon")+" "+o.optString("name")+badges); nm.setTextColor(d?T2:T1);
             ds.setText((pinMode?("["+games.get(o.optString("game")).optString("name")+"]  "):"")+o.optString("desc")); ds.setTextColor(d?T3:T2);
             gs.setText(o.optInt("gs")+"G"); gs.setTextColor(d?GREEN:GOLD);
+            String iu=o.optString("img","");
+            if(iu.length()>0){
+                loadIcon(iu,img);
+                if(d){ img.clearColorFilter(); img.setImageAlpha(255); }
+                else { android.graphics.ColorMatrix cm=new android.graphics.ColorMatrix(); cm.setSaturation(0f);
+                    img.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm)); img.setImageAlpha(135); }
+                img.setVisibility(View.VISIBLE);
+            } else img.setVisibility(View.GONE);
             return row;
         }
     }
