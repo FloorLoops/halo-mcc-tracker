@@ -94,6 +94,7 @@ public class MainActivity extends Activity {
             while(it.hasNext()){String k=it.next(); games.put(k,g.getJSONObject(k));}
             JSONArray a=rt.getJSONArray("achievements");
             for(int i=0;i<a.length();i++){JSONObject o=a.getJSONObject(i); all.add(o); totalGs+=o.optInt("gs");}
+            try{ JSONArray ex=new JSONArray(prefs.getString("extraAch","[]")); for(int i=0;i<ex.length();i++){ JSONObject o=ex.getJSONObject(i); all.add(o); totalGs+=o.optInt("gs"); } }catch(Exception e){}
         }catch(Exception e){}
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(BG);
@@ -605,19 +606,37 @@ public class MainActivity extends Activity {
                         else {
                             java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
                             for (JSONObject o : all) byName.put(o.optString("name").trim().toLowerCase(), o.optString("id"));
+                            JSONArray extra = new JSONArray();
+                            try { extra = new JSONArray(prefs.getString("extraAch","[]")); } catch (Exception e) {}
+                            int reconciled = 0;
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject a = arr.getJSONObject(i);
-                                String st = a.optString("progressState");
-                                boolean got = "Achieved".equalsIgnoreCase(st) || a.optInt("unlocked",0)==1 || a.optBoolean("isUnlocked",false);
-                                if (!got) continue;
-                                String id = byName.get(a.optString("name").trim().toLowerCase());
-                                if (id != null) {
+                                String nm = a.optString("name").trim();
+                                if (nm.length()==0) continue;
+                                String key = nm.toLowerCase();
+                                String id = byName.get(key);
+                                if (id == null) {
+                                    // missing from local DB — reconcile by adding Xbox's authoritative entry
+                                    String nid = "xbl_" + Integer.toHexString(key.hashCode());
+                                    int gs = 0;
+                                    JSONArray rw = a.optJSONArray("rewards");
+                                    if (rw != null) for (int k=0;k<rw.length();k++){ JSONObject rr=rw.optJSONObject(k); if(rr!=null && "Gamerscore".equalsIgnoreCase(rr.optString("type"))) { try{ gs=Integer.parseInt(rr.optString("value","0")); }catch(Exception e){} } }
+                                    JSONObject n = new JSONObject();
+                                    n.put("id", nid); n.put("name", nm); n.put("game", "mcc");
+                                    n.put("gs", gs); n.put("type", "meta"); n.put("icon", "🎖️");
+                                    n.put("desc", a.optString("description", a.optString("lockedDescription","")));
+                                    all.add(n); extra.put(n); byName.put(key, nid); totalGs += gs;
+                                    id = nid; reconciled++;
+                                }
+                                boolean got = "Achieved".equalsIgnoreCase(a.optString("progressState")) || a.optInt("unlocked",0)==1 || a.optBoolean("isUnlocked",false);
+                                if (got) {
                                     String tu = a.optString("timeUnlocked","");
                                     if (tu.length()==0) { JSONObject pg=a.optJSONObject("progression"); if(pg!=null) tu=pg.optString("timeUnlocked",""); }
                                     if (tu.length()>0) unlockTimes.put(id, tu);
                                     if (!done.contains(id)) { done.add(id); matched++; }
                                 }
                             }
+                            if (reconciled > 0) prefs.edit().putString("extraAch", extra.toString()).apply();
                         }
                     }
                 }
