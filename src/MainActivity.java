@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
     Set<String> done=new HashSet<String>(); Set<String> pins=new HashSet<String>();
     SharedPreferences prefs;
     int totalGs=0;
-    String tab="home", curGame="ce", fStatus="ALL", fType="all", query="";
+    String tab="home", curGame="ce", fStatus="ALL", fType="all", query="", fMission="";
     long sessionBase=0; int sessionChecks=0;
     LinearLayout root, content; AchAdapter adapter;
     TextView[] navBtns=new TextView[4];
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
         }
 
         LinearLayout oc=card();
-        oc.addView(text("CAMPAIGN PROGRESS",9.5f,T2,true));
+        oc.addView(text("OVERALL PROGRESS · ALL ACHIEVEMENTS",9.5f,T2,true));
         oc.addView(text(t[1]+" / "+t[0]+"  ·  "+pct+"%",23,GREEN,true));
         oc.addView(text("GAMERSCORE  "+t[3]+" / "+t[2]+" G",12,GOLD,false));
         oc.addView(bar(pct,GREEN));
@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
             gc.addView(row);
             gc.addView(text(g.optString("year")+" · "+c[1]+"/"+c[0]+" · "+c[3]+"/"+c[2]+" G",10,T2,false));
             gc.addView(bar(gp,accent));
-            gc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ curGame=gid; visitGame(gid); show("games"); } });
+            gc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ curGame=gid; fMission=""; visitGame(gid); show("games"); } });
             col.addView(gc); }
         final TextView foot=text("\n◇ FOR PERSONAL GLORY ◇",9.5f,T3,false); foot.setGravity(Gravity.CENTER);
         foot.setOnClickListener(new View.OnClickListener(){ long w=0; public void onClick(View v){ long now=System.currentTimeMillis(); if(now-w>1600){ footerTaps=0; } w=now; if(++footerTaps>=4 && pins.size()==4){ footerTaps=0; unlockMeta("egg_parliament"); } } });
@@ -270,7 +270,7 @@ public class MainActivity extends Activity {
             TextView ch=text(e.getValue().optString("name").replace("Halo: ","").replace("Halo ","H")+" "+(100*c[1]/c[0])+"%",12,on?CYAN:T2,on);
             ch.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,16)); ch.setPadding(dp(14),dp(8),dp(14),dp(8));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,-2); lp.rightMargin=dp(7); ch.setLayoutParams(lp);
-            ch.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(gid.equals(chipLast)){ if(++chipTaps>=7) unlockMeta("egg_madrigal"); } else { chipLast=gid; chipTaps=1; } curGame=gid; visitGame(gid); show("games"); } });
+            ch.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(gid.equals(chipLast)){ if(++chipTaps>=7) unlockMeta("egg_madrigal"); } else { chipLast=gid; chipTaps=1; } curGame=gid; fMission=""; visitGame(gid); show("games"); } });
             chips.addView(ch); }
         col.addView(hs);
 
@@ -307,6 +307,28 @@ public class MainActivity extends Activity {
             tb.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ fType=ty; show("games"); } });
             trow.addView(tb); }
         col.addView(ts);
+
+        // mission focus row: "what can I complete in THIS mission?"
+        java.util.LinkedHashMap<String,int[]> missions = new java.util.LinkedHashMap<String,int[]>();
+        for(JSONObject o:all){ if(!curGame.equals(o.optString("game"))) continue; String ms=o.optString("mission",""); if(ms.length()==0) continue;
+            int[] c=missions.get(ms); if(c==null){ c=new int[]{0,0}; missions.put(ms,c); } c[1]++; if(done.contains(o.optString("id"))) c[0]++; }
+        if(!missions.isEmpty()){
+            HorizontalScrollView ms=new HorizontalScrollView(this); ms.setHorizontalScrollBarEnabled(false);
+            LinearLayout mrow=new LinearLayout(this); mrow.setOrientation(LinearLayout.HORIZONTAL); ms.addView(mrow);
+            LinearLayout.LayoutParams mlp=new LinearLayout.LayoutParams(-1,-2); mlp.bottomMargin=dp(8); ms.setLayoutParams(mlp);
+            boolean allOn=fMission.equals("");
+            TextView allc=text("\ud83c\udfaf ALL MISSIONS",10,allOn?CYAN:T3,allOn); allc.setBackground(box(allOn?CARD2:BG2,allOn?CYAN:LINE,14)); allc.setPadding(dp(11),dp(6),dp(11),dp(6));
+            LinearLayout.LayoutParams alp=new LinearLayout.LayoutParams(-2,-2); alp.rightMargin=dp(6); allc.setLayoutParams(alp);
+            allc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ fMission=""; show("games"); } });
+            mrow.addView(allc);
+            for(java.util.Map.Entry<String,int[]> e:missions.entrySet()){ final String mn=e.getKey(); int[] c=e.getValue(); boolean on=mn.equals(fMission);
+                TextView mb=text(mn+" "+c[0]+"/"+c[1],10,on?CYAN:T3,on); mb.setBackground(box(on?CARD2:BG2,on?CYAN:LINE,14)); mb.setPadding(dp(11),dp(6),dp(11),dp(6));
+                LinearLayout.LayoutParams blp=new LinearLayout.LayoutParams(-2,-2); blp.rightMargin=dp(6); mb.setLayoutParams(blp);
+                mb.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ fMission=mn; show("games"); } });
+                mrow.addView(mb); }
+            col.addView(text("\ud83c\udfaf FOCUS \u2014 what can I knock out in one mission?",9,T3,false));
+            col.addView(ms);
+        }
 
         ListView lv=new ListView(this); lv.setDivider(null); lv.setDividerHeight(dp(7));
         lv.setLayoutParams(new LinearLayout.LayoutParams(-1,0,1f));
@@ -567,88 +589,83 @@ public class MainActivity extends Activity {
     void xboxSync() {
         final String key = prefs.getString("xblKey", "");
         if (key.length() == 0) { Toast.makeText(this, "save an OpenXBL key first (xbl.io)", Toast.LENGTH_SHORT).show(); return; }
-        Toast.makeText(this, "⚡ syncing with Xbox Live…", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "\u26a1 syncing with Xbox Live\u2026", Toast.LENGTH_SHORT).show();
         POOL.execute(new Runnable() { public void run() {
-            int matched = 0; String err = null; String gt = null;
+            String err = null; String gt = null;
+            final java.util.List<JSONObject> newAch = new java.util.ArrayList<JSONObject>();
+            final java.util.List<String> achievedIds = new java.util.ArrayList<String>();
+            final java.util.HashMap<String,String> times = new java.util.HashMap<String,String>();
             try {
-                // 1) verify key + get gamertag
                 String[] acc = apiGet("https://xbl.io/api/v2/account", key);
                 if (!acc[0].equals("200")) { err = "key rejected (HTTP " + acc[0] + "). Check the OpenXBL key at xbl.io."; }
                 else {
                     java.util.regex.Matcher gm = java.util.regex.Pattern.compile("\"gamertag\"\\s*:\\s*\"([^\"]+)\"").matcher(acc[1]);
                     if (gm.find()) gt = gm.group(1);
-                    // 2) find MCC titleId from title history
                     String titleId = null;
                     String[] th = apiGet("https://xbl.io/api/v2/player/titleHistory", key);
-                    if (th[0].equals("200")) {
-                        try {
-                            JSONObject root = new JSONObject(th[1]);
-                            JSONArray titles = root.optJSONArray("titles");
-                            if (titles != null) for (int i = 0; i < titles.length(); i++) {
-                                JSONObject t = titles.getJSONObject(i);
-                                String nm = t.optString("name","").toLowerCase();
-                                if (nm.contains("master chief")) { titleId = t.optString("titleId"); break; }
-                            }
-                        } catch (Exception e) {}
-                    }
-                    if (titleId == null) titleId = "1144039928"; // fallback MCC id
-                    // 3) fetch achievements for that title
+                    if (th[0].equals("200")) { try {
+                        JSONObject root = new JSONObject(th[1]); JSONArray titles = root.optJSONArray("titles");
+                        if (titles != null) for (int i = 0; i < titles.length(); i++) { JSONObject t = titles.getJSONObject(i);
+                            if (t.optString("name","").toLowerCase().contains("master chief")) { titleId = t.optString("titleId"); break; } }
+                    } catch (Exception e) {} }
+                    if (titleId == null) titleId = "1144039928";
                     String[] ar = apiGet("https://xbl.io/api/v2/achievements/title/" + titleId, key);
                     if (!ar[0].equals("200")) { err = "couldn't load MCC achievements (HTTP " + ar[0] + "). Play MCC once on this account, then retry."; }
                     else {
-                        JSONObject root = new JSONObject(ar[1]);
-                        JSONArray arr = null;
+                        JSONObject root = new JSONObject(ar[1]); JSONArray arr = null;
                         JSONObject content = root.optJSONObject("content");
                         if (content != null) arr = content.optJSONArray("achievements");
                         if (arr == null) arr = root.optJSONArray("achievements");
                         if (arr == null) arr = root.optJSONArray("titleAchievements");
-                        if (arr == null) { err = "no achievements returned — body: " + ar[1].substring(0, Math.min(140, ar[1].length())); }
+                        if (arr == null) { err = "no achievements returned \u2014 body: " + ar[1].substring(0, Math.min(140, ar[1].length())); }
                         else {
                             java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
                             for (JSONObject o : all) byName.put(o.optString("name").trim().toLowerCase(), o.optString("id"));
-                            JSONArray extra = new JSONArray();
-                            try { extra = new JSONArray(prefs.getString("extraAch","[]")); } catch (Exception e) {}
-                            int reconciled = 0;
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject a = arr.getJSONObject(i);
-                                String nm = a.optString("name").trim();
-                                if (nm.length()==0) continue;
-                                String key = nm.toLowerCase();
-                                String id = byName.get(key);
+                                String nm = a.optString("name").trim(); if (nm.length()==0) continue;
+                                String nkey = nm.toLowerCase();
+                                String id = byName.get(nkey);
                                 if (id == null) {
-                                    // missing from local DB — reconcile by adding Xbox's authoritative entry
-                                    String nid = "xbl_" + Integer.toHexString(key.hashCode());
-                                    int gs = 0;
-                                    JSONArray rw = a.optJSONArray("rewards");
+                                    String nid = "xbl_" + Integer.toHexString(nkey.hashCode());
+                                    int gs = 0; JSONArray rw = a.optJSONArray("rewards");
                                     if (rw != null) for (int k=0;k<rw.length();k++){ JSONObject rr=rw.optJSONObject(k); if(rr!=null && "Gamerscore".equalsIgnoreCase(rr.optString("type"))) { try{ gs=Integer.parseInt(rr.optString("value","0")); }catch(Exception e){} } }
                                     JSONObject n = new JSONObject();
-                                    n.put("id", nid); n.put("name", nm); n.put("game", "mcc");
-                                    n.put("gs", gs); n.put("type", "meta"); n.put("icon", "🎖️");
+                                    n.put("id", nid); n.put("name", nm); n.put("game", "mcc"); n.put("gs", gs);
+                                    n.put("type", "meta"); n.put("icon", "\ud83c\udf96\ufe0f");
                                     n.put("desc", a.optString("description", a.optString("lockedDescription","")));
-                                    all.add(n); extra.put(n); byName.put(key, nid); totalGs += gs;
-                                    id = nid; reconciled++;
+                                    newAch.add(n); byName.put(nkey, nid); id = nid;
                                 }
                                 boolean got = "Achieved".equalsIgnoreCase(a.optString("progressState")) || a.optInt("unlocked",0)==1 || a.optBoolean("isUnlocked",false);
                                 if (got) {
                                     String tu = a.optString("timeUnlocked","");
                                     if (tu.length()==0) { JSONObject pg=a.optJSONObject("progression"); if(pg!=null) tu=pg.optString("timeUnlocked",""); }
-                                    if (tu.length()>0) unlockTimes.put(id, tu);
-                                    if (!done.contains(id)) { done.add(id); matched++; }
+                                    if (tu.length()>0) times.put(id, tu);
+                                    achievedIds.add(id);
                                 }
                             }
-                            if (reconciled > 0) prefs.edit().putString("extraAch", extra.toString()).apply();
                         }
                     }
                 }
             } catch (Exception e) { err = "error: " + e; }
-            final int fm = matched; final String fe = err; final String fgt = gt;
+            final String fe = err; final String fgt = gt;
             runOnUiThread(new Runnable() { public void run() {
-                if (fe != null) { new AlertDialog.Builder(MainActivity.this).setTitle("Sync failed").setMessage(fe + (fgt!=null?"\n\n(key works — signed in as "+fgt+")":"")).setPositiveButton("OK",null).show(); return; }
+                if (fe != null) { new AlertDialog.Builder(MainActivity.this).setTitle("Sync failed").setMessage(fe + (fgt!=null?"\n\n(key works \u2014 signed in as "+fgt+")":"")).setPositiveButton("OK",null).show(); return; }
+                // apply ALL mutations on the UI thread (thread-safe)
+                if (!newAch.isEmpty()) {
+                    JSONArray extra = new JSONArray();
+                    try { extra = new JSONArray(prefs.getString("extraAch","[]")); } catch (Exception e) {}
+                    for (JSONObject n : newAch) { all.add(n); totalGs += n.optInt("gs"); extra.put(n); }
+                    prefs.edit().putString("extraAch", extra.toString()).apply();
+                }
+                int fm = 0;
+                for (String id : achievedIds) { if (!done.contains(id)) { done.add(id); fm++; } }
+                for (java.util.Map.Entry<String,String> e : times.entrySet()) unlockTimes.put(e.getKey(), e.getValue());
                 try{ JSONObject ut=new JSONObject(); for(java.util.Map.Entry<String,String> e:unlockTimes.entrySet()) ut.put(e.getKey(),e.getValue()); prefs.edit().putString("ut",ut.toString()).apply(); }catch(Exception e){}
                 bulkUnlock=true; saveSet(done, "done");
                 int beforeM=metas.size(); unlockMeta("ftsync"); checkMetas(); bulkUnlock=false;
                 int gainedM=metas.size()-beforeM;
-                Toast.makeText(MainActivity.this, "✔ "+(fgt!=null?fgt+": ":"")+"+" + fm + " synced · +" + gainedM + " app achievements", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "\u2714 "+(fgt!=null?fgt+": ":"")+"+" + fm + " synced \u00b7 +" + gainedM + " app achievements", Toast.LENGTH_LONG).show();
                 show(tab); } });
         } });
     }
@@ -942,6 +959,7 @@ public class MainActivity extends Activity {
                     if(fStatus.equals("TODO")&&d) continue;
                     if(fStatus.equals("DONE")&&!d) continue;
                     if(!fType.equals("all")&&!fType.equals(o.optString("type"))) continue;
+                    if(fMission.length()>0&&!fMission.equals(o.optString("mission",""))) continue;
                     if(query.length()>0&&!(o.optString("name")+" "+o.optString("desc")).toLowerCase().contains(query)) continue;
                 }
                 items.add(o); }
