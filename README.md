@@ -5,7 +5,7 @@
 
 *Every achievement. Every game. One terminal.*
 
-![version](https://img.shields.io/badge/version-1.2.1-5c8a3a?style=for-the-badge)
+![version](https://img.shields.io/badge/version-1.2.2-5c8a3a?style=for-the-badge)
 ![platform](https://img.shields.io/badge/Android%20·%20native-2d5a87?style=for-the-badge)
 ![database](https://img.shields.io/badge/database-690%20·%207110G-d4a017?style=for-the-badge)
 ![sync](https://img.shields.io/badge/Xbox%20Live-sync-107c10?style=for-the-badge)
@@ -41,7 +41,7 @@
 
 | Channel | What you get |
 |---|---|
-| [**Releases**](../../releases) | `UNSCTerminal-v1.2.1.apk` — native Android app (sideload) |
+| [**Releases**](../../releases) | `UNSCTerminal-v1.2.2.apk` — native Android app (sideload) |
 | [**Web**](https://floorloops.github.io/halo-mcc-tracker/) | Browser version — desktop-friendly, same database lineage |
 | `src/` | Full source — single-file Java, zero dependencies, no-Gradle build |
 
@@ -52,7 +52,8 @@
 | **v1.0** | Native app · ~690-achievement database · real icons · guide links | ✅ shipped |
 | **v1.1.5** | **Xbox Live sync** (+ unlock dates) · **100+ in-app achievements** with animated unlock banners, sounds, replay & a climbing app-rank · hidden easter eggs · UNSC rank ladder · estimated time-to-100% · per-type stats · in-app roadmap · "What's New" update review · Grunt API key field · Halo Waypoint-inspired | ✅ shipped |
 | **v1.2.1** | **Difficulty-weighted time-to-completion** (a LASO playlist counts as 20+ hrs, not 1) · Xbox sync fills in achievements your account has that the local DB is missing | ✅ shipped |
-| **v1.2.2** | Exact **700 / 7,000G** reconciliation — bake the full official TrueAchievements set into the static database (currently 690 / 7,110G) | 🔜 next |
+| **v1.2.2** | Fixed 2 dead easter-egg triggers (all 11 unlockable) · **undo accidental checks** + **reset-to-Xbox-sync** (manual checking always works) | ✅ shipped |
+| **v1.2.3** | Exact **700 / 7,000G** reconciliation — bake the full official TrueAchievements set into the static database (currently 690 / 7,110G) | 🔜 next |
 | **v1.2** | **Overhauled ranking** (XP-weighted — heavier achievements lift your rank more than flat %) · **choose your rank style: modern MCC / Halo 3 / Halo: Reach** · **Focus Mode** — "best next targets" ranked by gamerscore-per-hour · **smart breakdown** (closest game to 100%, easiest category to clear, XP earned) | ✅ shipped |
 | **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |
 | **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass · **in-app feedback button that emails feature requests straight to the dev** | planned |

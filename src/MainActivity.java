@@ -56,6 +56,7 @@ public class MainActivity extends Activity {
     java.util.HashMap<String,Integer> detailOpens = new java.util.HashMap<String,Integer>();
     FrameLayout overlay;
     int titleTaps=0, footerTaps=0, chipTaps=0; String chipLast="";
+    long egChkMs=0; String egChkId=""; java.util.ArrayList<Long> egRecent=new java.util.ArrayList<Long>(); String lastToggleId="";
     long lastCheckMs=0; String lastCheckedId=""; int checkBurst=0;
     boolean bulkUnlock=false;
     java.util.HashMap<String,String> unlockTimes = new java.util.HashMap<String,String>();
@@ -454,7 +455,13 @@ public class MainActivity extends Activity {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             public void onItemClick(AdapterView<?> p,View v,int pos,long id){
                 JSONObject o=ad.items.get(pos); String aid=o.optString("id");
-                if(done.contains(aid)) done.remove(aid); else { done.add(aid); buzz(); sessionChecks++; }
+                if(done.contains(aid)){ done.remove(aid);
+                    if(aid.equals(egChkId) && System.currentTimeMillis()-egChkMs<2500) unlockMeta("egg_easy"); }
+                else { done.add(aid); buzz(); sessionChecks++;
+                    long now=System.currentTimeMillis(); egChkId=aid; egChkMs=now;
+                    egRecent.add(now); while(egRecent.size()>3) egRecent.remove(0);
+                    if(egRecent.size()==3 && now-egRecent.get(0)<=10000) unlockMeta("egg_grunt"); }
+                lastToggleId=aid;
                 saveSet(done,"done"); ad.refilter(); } });
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
             public boolean onItemLongClick(AdapterView<?> p,View v,int pos,long id){
@@ -626,6 +633,27 @@ public class MainActivity extends Activity {
             cm.setPrimaryClip(ClipData.newPlainText("halo",prefs.getString("done","")));
             unlockMeta("ftback"); Toast.makeText(MainActivity.this,"✓ progress copied — paste anywhere safe",Toast.LENGTH_SHORT).show(); } });
         ex.addView(cp);
+        // v1.2.2 — undo accidental checks + reset to Xbox-synced state (manual check/uncheck always still works)
+        TextView undo=text("↩ UNDO LAST CHECK",12,GOLD,true); undo.setBackground(box(CARD2,GOLD,6)); undo.setPadding(dp(14),dp(8),dp(14),dp(8));
+        LinearLayout.LayoutParams ulp=new LinearLayout.LayoutParams(-2,-2); ulp.topMargin=dp(8); undo.setLayoutParams(ulp);
+        undo.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
+            if(lastToggleId.length()==0){ Toast.makeText(MainActivity.this,"nothing to undo",Toast.LENGTH_SHORT).show(); return; }
+            if(done.contains(lastToggleId)) done.remove(lastToggleId); else done.add(lastToggleId);
+            saveSet(done,"done"); Toast.makeText(MainActivity.this,"↩ undone",Toast.LENGTH_SHORT).show(); lastToggleId=""; show(tab); } });
+        ex.addView(undo);
+        TextView rs=text("↻ RESET CHECKS TO MY XBOX SYNC",12,CYAN,true); rs.setBackground(box(CARD2,CYAN,6)); rs.setPadding(dp(14),dp(8),dp(14),dp(8));
+        LinearLayout.LayoutParams rlp=new LinearLayout.LayoutParams(-2,-2); rlp.topMargin=dp(8); rs.setLayoutParams(rlp);
+        rs.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
+            final String sd=prefs.getString("syncedDone","");
+            if(sd.length()==0){ Toast.makeText(MainActivity.this,"Sync with Xbox first (paste your key + tap Sync) — then this can restore your exact account state.",Toast.LENGTH_LONG).show(); return; }
+            new AlertDialog.Builder(MainActivity.this).setTitle("Reset to Xbox sync?")
+                .setMessage("Clears any manual/accidental checks and restores exactly what your Xbox account has unlocked. You can re-check anything by hand afterward.")
+                .setPositiveButton("RESET",new android.content.DialogInterface.OnClickListener(){ public void onClick(android.content.DialogInterface d,int w){
+                    done.clear(); for(String x:sd.split(",")) if(x.length()>0) done.add(x); saveSet(done,"done");
+                    Toast.makeText(MainActivity.this,"✓ reset to your Xbox-synced achievements",Toast.LENGTH_SHORT).show(); show(tab); } })
+                .setNegativeButton("CANCEL",null).show(); } });
+        ex.addView(rs);
+        ex.addView(text("Tap any achievement to check/uncheck it yourself anytime — even when synced. “Reset” only undoes accidental checks back to your Xbox state.",8.5f,T3,false));
         ex.addView(text("Database: 690 achievements / 7,110G from Halopedia (live icons + wiki links). Xbox sync reconciles toward the full ~700 — it adds any achievements your account has that this DB is missing.",9,T3,false));
         col.addView(ex);
 
@@ -635,7 +663,8 @@ public class MainActivity extends Activity {
             {"1","v1.1.5","Xbox Live sync (+ unlock dates) · 100+ in-app achievements: animated banners, sounds, replay, app-rank, secrets · rank ladder · time-to-100% · per-type stats · in-app roadmap"},
             {"1","v1.2","XP-weighted ranking overhaul · choose rank style: MCC / Halo 3 / Reach · focus mode (best next targets) · smart breakdowns"},
             {"1","v1.2.1","Difficulty-weighted time-to-completion (LASO ≈ 20h+, not 1h) · Xbox sync fills in any achievements your account has that the DB is missing"},
-            {"0","v1.2.2","Exact 700/7000 DB reconciliation — bake the full TrueAchievements set into the static database (currently 690/7110)"},
+            {"1","v1.2.2","Fixed 2 dead easter-egg triggers (all 11 unlockable now) · undo accidental checks + reset-to-Xbox-sync (manual checking always works)"},
+            {"0","v1.2.3","Exact 700/7000 DB reconciliation — bake the full TrueAchievements set into the static database (currently 690/7110)"},
             {"0","v1.2.5","Native UI glow-up (match the web version)"},
             {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass · in-app feedback button → emails floorloops@parliamentfour.com directly"},
             {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
@@ -655,7 +684,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.2.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.2.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -771,6 +800,8 @@ public class MainActivity extends Activity {
                 }
                 int fm = 0;
                 for (String id : achievedIds) { if (!done.contains(id)) { done.add(id); fm++; } }
+                // v1.2.2 — remember the Xbox-authoritative done set so accidental manual checks can be reset away
+                { StringBuilder sb=new StringBuilder(); for(String id:achievedIds){ if(sb.length()>0) sb.append(','); sb.append(id);} prefs.edit().putString("syncedDone",sb.toString()).apply(); }
                 for (java.util.Map.Entry<String,String> e : times.entrySet()) unlockTimes.put(e.getKey(), e.getValue());
                 try{ JSONObject ut=new JSONObject(); for(java.util.Map.Entry<String,String> e:unlockTimes.entrySet()) ut.put(e.getKey(),e.getValue()); prefs.edit().putString("ut",ut.toString()).apply(); }catch(Exception e){}
                 bulkUnlock=true; saveSet(done, "done");
