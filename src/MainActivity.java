@@ -626,7 +626,7 @@ public class MainActivity extends Activity {
             cm.setPrimaryClip(ClipData.newPlainText("halo",prefs.getString("done","")));
             unlockMeta("ftback"); Toast.makeText(MainActivity.this,"✓ progress copied — paste anywhere safe",Toast.LENGTH_SHORT).show(); } });
         ex.addView(cp);
-        ex.addView(text("Database: 690 achievements / 7,110G imported from Halopedia (live icons + wiki links). Exact-700 reconciliation vs TrueAchievements: next update.",9,T3,false));
+        ex.addView(text("Database: 690 achievements / 7,110G from Halopedia (live icons + wiki links). Xbox sync reconciles toward the full ~700 — it adds any achievements your account has that this DB is missing.",9,T3,false));
         col.addView(ex);
 
         LinearLayout rm=card(); rm.addView(text("🗺️ ROADMAP",9.5f,T2,true));
@@ -634,7 +634,8 @@ public class MainActivity extends Activity {
             {"1","v1.0","Native app · ~690-achievement database (Halopedia) · real icons · guides"},
             {"1","v1.1.5","Xbox Live sync (+ unlock dates) · 100+ in-app achievements: animated banners, sounds, replay, app-rank, secrets · rank ladder · time-to-100% · per-type stats · in-app roadmap"},
             {"1","v1.2","XP-weighted ranking overhaul · choose rank style: MCC / Halo 3 / Reach · focus mode (best next targets) · smart breakdowns"},
-            {"1","v1.2.1","Exact-700 reconciliation (Xbox sync adds any missing achievements) · difficulty-weighted time-to-completion (LASO ≈ 20h+, not 1h)"},
+            {"1","v1.2.1","Difficulty-weighted time-to-completion (LASO ≈ 20h+, not 1h) · Xbox sync fills in any achievements your account has that the DB is missing"},
+            {"0","v1.2.2","Exact 700/7000 DB reconciliation — bake the full TrueAchievements set into the static database (currently 690/7110)"},
             {"0","v1.2.5","Native UI glow-up (match the web version)"},
             {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass · in-app feedback button → emails floorloops@parliamentfour.com directly"},
             {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
