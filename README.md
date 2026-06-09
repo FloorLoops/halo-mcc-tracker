@@ -12,8 +12,7 @@
 
 <br>
 
-<img src="screenshots/home.png" width="270" alt="Home — rank + campaign progress">&nbsp;&nbsp;
-<img src="screenshots/games.png" width="270" alt="Achievements — real icons, search, filters">
+<!-- screenshots removed from GitHub for now (kept locally) -->
 
 </div>
 
