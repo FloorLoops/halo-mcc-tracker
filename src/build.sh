@@ -8,7 +8,7 @@ BT=${BT:-$(ls -d $SDK/android-1*/ 2>/dev/null | grep -E 'android-1[0-9]/' | head
 [ -x "$BT/aapt2" ] || BT=$(dirname $(find $SDK -name aapt2 | head -1))
 AJ=${AJ:-$(find $SDK -name android.jar | head -1)}
 ECJ=${ECJ:-$SDK/ecj.jar}
-KS=${KS:-/tmp/halo-debug.ks}
+KS=${KS:-../../../Apps/HaloTracker/halotracker-debug.ks}
 OUTNAME=${1:-UNSCTerminal.apk}
 PKG_PATH=four/parliament/halotracker
 
@@ -21,7 +21,7 @@ cp data.json $OUT/assets/data.json
 "$BT/aapt2" link -o $OUT/base.apk -I "$AJ" --manifest AndroidManifest.xml -A $OUT/assets --java $OUT/gen $OUT/res.zip
 
 # 2. java -> class -> dex  (ecj: JRE-only compiler, source/target 8, no lambdas)
-java -jar "$ECJ" -source 8 -target 8 -nowarn -bootclasspath "$AJ" -d $OUT/classes \
+java -jar "$ECJ" -encoding UTF-8 -source 8 -target 8 -nowarn -bootclasspath "$AJ" -d $OUT/classes \
   $OUT/gen/$PKG_PATH/R.java MainActivity.java
 "$BT/d8" --lib "$AJ" --release --output $OUT/apk $(find $OUT/classes -name '*.class')
 

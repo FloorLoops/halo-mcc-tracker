@@ -118,7 +118,8 @@ public class MainActivity extends Activity {
             try{ JSONArray ex=new JSONArray(prefs.getString("extraAch","[]")); for(int i=0;i<ex.length();i++){ JSONObject o=ex.getJSONObject(i); all.add(o); totalGs+=o.optInt("gs"); } }catch(Exception e){}
         }catch(Exception e){}
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
-        root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(BG);
+        root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{BG2,BG})); // v1.2.5 depth
         content=new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
         content.setLayoutParams(new LinearLayout.LayoutParams(-1,0,1f));
         root.addView(content);
@@ -152,6 +153,30 @@ public class MainActivity extends Activity {
         pb.setProgressTintList(android.content.res.ColorStateList.valueOf(color));
         pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF223040));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(7)); lp.topMargin=dp(8); pb.setLayoutParams(lp); return pb; }
+    /* ===== v1.2.5-v1.5 helpers ===== */
+    GradientDrawable glow(int top,int bottom,int stroke,int rad){
+        GradientDrawable g=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{top,bottom});
+        g.setCornerRadius(dp(rad)); g.setStroke(dp(1),stroke); return g; }
+    LinearLayout glowCard(int accent){ LinearLayout c=card(); c.setBackground(glow(CARD2,CARD,accent,9)); return c; }
+    View rule(int color){ View v=new View(this); LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(2)); lp.topMargin=dp(7); lp.bottomMargin=dp(3); v.setLayoutParams(lp);
+        v.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,new int[]{color,0x00000000})); return v; }
+    static String gameIcon(String g){
+        if("ce".equals(g)) return "🔆"; if("h2".equals(g)) return "⚔️"; if("h3".equals(g)) return "🪖";
+        if("odst".equals(g)) return "🌃"; if("reach".equals(g)) return "🌌"; if("h4".equals(g)) return "🌐";
+        return "🎖️"; }
+    boolean sfxOn(){ return prefs.getBoolean("sfxOn",true); }
+    boolean notifOn(){ return prefs.getBoolean("notifOn",true); }
+    void playTick(){ if(!sfxOn()) return; POOL.execute(new Runnable(){ public void run(){ try{
+        ToneGenerator tg=new ToneGenerator(AudioManager.STREAM_MUSIC,60);
+        tg.startTone(ToneGenerator.TONE_PROP_BEEP,55); Thread.sleep(80); tg.release(); }catch(Exception e){} } }); }
+    void playNotify(){ if(!notifOn()) return; POOL.execute(new Runnable(){ public void run(){ try{
+        ToneGenerator tg=new ToneGenerator(AudioManager.STREAM_MUSIC,95);
+        tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD,170); Thread.sleep(190);
+        tg.startTone(ToneGenerator.TONE_CDMA_HIGH_L,240); Thread.sleep(260);
+        tg.startTone(ToneGenerator.TONE_CDMA_HIGH_PBX_L,300); Thread.sleep(320); tg.release(); }catch(Exception e){} } }); }
+    String fullRes(String thumb){ if(thumb==null||thumb.length()==0) return thumb;
+        try{ java.util.regex.Matcher m=java.util.regex.Pattern.compile("(.*/images)/thumb/(.+?)/[0-9]+px-[^/]+$").matcher(thumb);
+            if(m.find()) return m.group(1)+"/"+m.group(2); }catch(Exception e){} return thumb; }
     int[] count(String gid){ int n=0,dn=0,gs=0,gsd=0;
         for(JSONObject o:all){ if(gid!=null&&!gid.equals(o.optString("game"))) continue; n++; gs+=o.optInt("gs");
             if(done.contains(o.optString("id"))){dn++; gsd+=o.optInt("gs");}} return new int[]{n,dn,gs,gsd}; }
@@ -200,7 +225,8 @@ public class MainActivity extends Activity {
         if(t.equals("home")) content.addView(buildHome());
         else if(t.equals("games")) content.addView(buildGames());
         else if(t.equals("pins")) content.addView(buildPins());
-        else content.addView(buildMore()); }
+        else content.addView(buildMore());
+        content.setAlpha(0f); content.animate().alpha(1f).setDuration(220).start(); } // v1.4 screen transition
 
     /* ===== HOME ===== */
     View buildHome(){
@@ -211,10 +237,11 @@ public class MainActivity extends Activity {
         title.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(++titleTaps>=7){ titleTaps=0; unlockMeta("egg_bloom"); } } });
         col.addView(title);
         col.addView(text("MCC ACHIEVEMENT DATABASE · CLASSIFIED",9.5f,T3,false));
+        col.addView(rule(CYAN)); // v1.2.5
 
         int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0];
         int rpct=rankPct(); String[] rk=rank(rpct);
-        LinearLayout rc=card(); rc.setBackground(box(CARD,CYAN,8));
+        LinearLayout rc=card(); rc.setBackground(glow(CARD2,CARD,CYAN,9)); // v1.2.5 glow
         LinearLayout rrow=new LinearLayout(this); rrow.setOrientation(LinearLayout.HORIZONTAL); rrow.setGravity(Gravity.CENTER_VERTICAL);
         TextView ic=text(rk[2],30,T1,false); ic.setPadding(0,0,dp(12),0); rrow.addView(ic);
         LinearLayout rcol=new LinearLayout(this); rcol.setOrientation(LinearLayout.VERTICAL); rcol.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
@@ -244,7 +271,7 @@ public class MainActivity extends Activity {
             col.addView(tc);
         }
 
-        LinearLayout oc=card();
+        LinearLayout oc=card(); oc.setBackground(glow(CARD2,CARD,GREEN,9)); // v1.2.5 glow
         oc.addView(text("OVERALL PROGRESS · ALL ACHIEVEMENTS",9.5f,T2,true));
         oc.addView(text(t[1]+" / "+t[0]+"  ·  "+pct+"%",23,GREEN,true));
         oc.addView(text("GAMERSCORE  "+t[3]+" / "+t[2]+" G",12,GOLD,false));
@@ -293,7 +320,7 @@ public class MainActivity extends Activity {
             int accent=Color.parseColor(g.optString("color","#00b8e8"));
             LinearLayout gc=card(); if(gp==100) gc.setBackground(box(CARD,GREEN,8));
             LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
-            TextView nm=text(g.optString("name"),15,T1,true); nm.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); row.addView(nm);
+            TextView nm=text(gameIcon(gid)+" "+g.optString("name"),15,T1,true); nm.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); row.addView(nm);
             row.addView(text(gp==100?"✔ 100%":gp+"%",14,gp==100?GREEN:accent,true));
             gc.addView(row);
             gc.addView(text(g.optString("year")+" · "+c[1]+"/"+c[0]+" · "+c[3]+"/"+c[2]+" G",10,T2,false));
@@ -373,12 +400,14 @@ public class MainActivity extends Activity {
     View buildGames(){
         LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
         col.setPadding(dp(10),dp(12),dp(10),0);
+        try{ int acc=Color.parseColor(games.get(curGame).optString("color","#00b8e8"));
+            col.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{(acc&0x00FFFFFF)|0x2E000000,BG})); }catch(Exception e){}
         HorizontalScrollView hs=new HorizontalScrollView(this); hs.setHorizontalScrollBarEnabled(false);
         LinearLayout chips=new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL); hs.addView(chips);
         for(Map.Entry<String,JSONObject> e:games.entrySet()){
             final String gid=e.getKey(); int[] c=count(gid); if(c[0]==0) continue;
             boolean on=gid.equals(curGame);
-            TextView ch=text(e.getValue().optString("name").replace("Halo: ","").replace("Halo ","H")+" "+(100*c[1]/c[0])+"%",12,on?CYAN:T2,on);
+            TextView ch=text(gameIcon(gid)+" "+e.getValue().optString("name").replace("Halo: ","").replace("Halo ","H")+" "+(100*c[1]/c[0])+"%",12,on?CYAN:T2,on);
             ch.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,16)); ch.setPadding(dp(14),dp(8),dp(14),dp(8));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,-2); lp.rightMargin=dp(7); ch.setLayoutParams(lp);
             ch.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(gid.equals(chipLast)){ if(++chipTaps>=7) unlockMeta("egg_madrigal"); } else { chipLast=gid; chipTaps=1; } curGame=gid; fMission=""; visitGame(gid); show("games"); } });
@@ -457,10 +486,12 @@ public class MainActivity extends Activity {
                 JSONObject o=ad.items.get(pos); String aid=o.optString("id");
                 if(done.contains(aid)){ done.remove(aid);
                     if(aid.equals(egChkId) && System.currentTimeMillis()-egChkMs<2500) unlockMeta("egg_easy"); }
-                else { done.add(aid); buzz(); sessionChecks++;
+                else { done.add(aid); buzz(); playTick(); sessionChecks++;
                     long now=System.currentTimeMillis(); egChkId=aid; egChkMs=now;
                     egRecent.add(now); while(egRecent.size()>3) egRecent.remove(0);
-                    if(egRecent.size()==3 && now-egRecent.get(0)<=10000) unlockMeta("egg_grunt"); }
+                    if(egRecent.size()==3 && now-egRecent.get(0)<=10000) unlockMeta("egg_grunt");
+                    String gcg=o.optString("game"); int[] gcc=count(gcg);
+                    if(gcc[0]>0 && gcc[1]==gcc[0]){ playNotify(); Toast.makeText(MainActivity.this,"🎖️ "+gameName(gcg)+" — 100% COMPLETE",Toast.LENGTH_LONG).show(); } }
                 lastToggleId=aid;
                 saveSet(done,"done"); ad.refilter(); } });
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
@@ -480,15 +511,16 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle(o.optString("icon")+" "+o.optString("name")+" · "+o.optInt("gs")+"G")
             .setMessage(o.optString("desc")+"\n\n📖 GUIDE\n"+o.optString("guide","No guide yet.")+"\n\n"+extra)
-            .setNeutralButton("GUIDES ▸",new android.content.DialogInterface.OnClickListener(){
+            .setNeutralButton("ART & GUIDES ▸",new android.content.DialogInterface.OnClickListener(){
                 public void onClick(android.content.DialogInterface d,int w){
-                    final String[] opts={"📚 Halopedia page","🏆 TrueAchievements","▶️ YouTube solutions"};
+                    final String[] opts={"🖼 View full artwork","📚 Halopedia page","🏆 TrueAchievements","▶️ YouTube solutions"};
                     new AlertDialog.Builder(MainActivity.this).setTitle(o.optString("name"))
                         .setItems(opts,new android.content.DialogInterface.OnClickListener(){
                             public void onClick(android.content.DialogInterface dd,int which){
+                                if(which==0){ showArtwork(o); return; }
                                 String u;
-                                if(which==0) u=o.optString("wiki","https://www.halopedia.org");
-                                else if(which==1) u="https://www.trueachievements.com/searchresults.aspx?search="+java.net.URLEncoder.encode(o.optString("name"));
+                                if(which==1) u=o.optString("wiki","https://www.halopedia.org");
+                                else if(which==2) u="https://www.trueachievements.com/searchresults.aspx?search="+java.net.URLEncoder.encode(o.optString("name"));
                                 else u="https://www.youtube.com/results?search_query="+java.net.URLEncoder.encode("Halo MCC "+o.optString("name")+" achievement guide");
                                 try{ startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(u))); }catch(Exception e){}
                             } }).show(); } })
@@ -500,6 +532,46 @@ public class MainActivity extends Activity {
                     Toast.makeText(MainActivity.this,pins.contains(aid)?"📌 pinned":"unpinned",Toast.LENGTH_SHORT).show(); } })
             .setNegativeButton("CLOSE",null).show();
     }
+
+    /* ===== v1.3.5 full-resolution achievement artwork viewer ===== */
+    void showArtwork(final JSONObject o){
+        final FrameLayout fx=new FrameLayout(this); fx.setBackgroundColor(0xF20A0E13);
+        overlay.addView(fx,new FrameLayout.LayoutParams(-1,-1));
+        LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setGravity(Gravity.CENTER);
+        FrameLayout.LayoutParams clp=new FrameLayout.LayoutParams(-1,-1); clp.leftMargin=dp(18); clp.rightMargin=dp(18); col.setLayoutParams(clp);
+        col.addView(textC(o.optString("icon")+"  "+o.optString("name"),16,GOLD,true));
+        col.addView(textC(o.optInt("gs")+"G · "+gameName(o.optString("game"))+(o.optString("mission","").length()>0?" · "+o.optString("mission"):""),10.5f,T2,false));
+        final android.widget.ImageView iv=new android.widget.ImageView(this);
+        int sz=Math.min(getResources().getDisplayMetrics().widthPixels,getResources().getDisplayMetrics().heightPixels)-dp(90);
+        LinearLayout.LayoutParams ilp=new LinearLayout.LayoutParams(sz,sz); ilp.topMargin=dp(14); ilp.bottomMargin=dp(10); iv.setLayoutParams(ilp);
+        iv.setAdjustViewBounds(true); iv.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+        iv.setBackground(box(BG2,LINE,8)); col.addView(iv);
+        col.addView(textC("full-res from Halopedia · tap anywhere to close",9.5f,T3,false));
+        fx.addView(col);
+        loadFull(fullRes(o.optString("img","")),iv);
+        col.setAlpha(0f); col.setScaleX(0.94f); col.setScaleY(0.94f);
+        col.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(280).start();
+        fx.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ try{ overlay.removeView(fx); }catch(Exception e){} } });
+    }
+    void loadFull(final String url,final android.widget.ImageView iv){
+        if(url==null||url.length()==0) return;
+        android.graphics.Bitmap c=memCache.get("full:"+url); if(c!=null){ iv.setImageBitmap(c); return; }
+        final int target=Math.min(getResources().getDisplayMetrics().widthPixels,1200);
+        POOL.execute(new Runnable(){ public void run(){ try{
+            String fn="full_"+Integer.toHexString(url.hashCode());
+            java.io.File f=new java.io.File(getCacheDir(),fn);
+            if(!(f.exists()&&f.length()>0)){
+                java.net.HttpURLConnection c2=(java.net.HttpURLConnection)new java.net.URL(url).openConnection();
+                c2.setConnectTimeout(8000); c2.setReadTimeout(12000); c2.setRequestProperty("User-Agent","UNSC-Terminal-personal/1.0");
+                java.io.InputStream in=c2.getInputStream(); java.io.FileOutputStream fo=new java.io.FileOutputStream(f);
+                byte[] b=new byte[8192]; int r; while((r=in.read(b))>0) fo.write(b,0,r); fo.close(); in.close(); }
+            android.graphics.BitmapFactory.Options op=new android.graphics.BitmapFactory.Options(); op.inJustDecodeBounds=true;
+            android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath(),op);
+            int s=1; while((op.outWidth/s>target||op.outHeight/s>target)) s*=2;
+            android.graphics.BitmapFactory.Options o2=new android.graphics.BitmapFactory.Options(); o2.inSampleSize=s;
+            final android.graphics.Bitmap bm=android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath(),o2);
+            if(bm!=null) runOnUiThread(new Runnable(){ public void run(){ if(memCache.size()>120) memCache.clear(); memCache.put("full:"+url,bm); iv.setImageBitmap(bm); } });
+        }catch(Exception e){} } }); }
 
     void visitGame(String gid){ visitedGames.add(gid); saveCsv(visitedGames,"vgames"); int g=0; for(java.util.Map.Entry<String,JSONObject> e:games.entrySet()){ int[] c=count(e.getKey()); if(c[0]>0) g++; } if(visitedGames.size()>=g) unlockMeta("egg_library"); }
 
@@ -572,9 +644,9 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams gslp=new LinearLayout.LayoutParams(-2,-2); gslp.topMargin=dp(8); gsave.setLayoutParams(gslp);
         gsave.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
             prefs.edit().putString("gruntKey",gkey.getText().toString().trim()).apply();
-            Toast.makeText(MainActivity.this,"✓ Grunt API key saved — career stats arrive in v1.3",Toast.LENGTH_SHORT).show(); } });
+            Toast.makeText(MainActivity.this,"✓ Grunt API key saved — feeds your Career Dossier",Toast.LENGTH_SHORT).show(); } });
         gk.addView(gsave);
-        gk.addView(text("Get ahead of v1.3: paste your Grunt API key now and career stats (medals, headshots, kills, accuracy, playtime) will light up automatically when that update lands.",9,T3,false));
+        gk.addView(text("Career Dossier (More ▸ 🎖️) is live. Paste your Grunt API key + sync Xbox to layer live stats on top; deeper combat stats (medals, kills, accuracy, playtime) populate as that source returns them.",9,T3,false));
         col.addView(gk);
 
         int[] t=count(null);
@@ -585,6 +657,7 @@ public class MainActivity extends Activity {
         stc.addView(text("LASO left  "+countType("laso")+"   ·   skulls left  "+countType("skull"),12.5f,PURPLE,false));
         double[] est2=timeLeft(); stc.addView(text("est. time to 100%  "+fmtHours(est2[0]),12.5f,GOLD,false));
         col.addView(stc);
+        col.addView(careerCard()); // v1.3 career dossier
         if(PREMIUM){
         LinearLayout tyc=card(); tyc.addView(text("📂 BY TYPE (left to do)",9.5f,T2,true));
         String[] tys={"story","skull","terminal","speed","legendary","laso","multiplayer","firefight","spartan_ops","collectible"};
@@ -657,6 +730,33 @@ public class MainActivity extends Activity {
         ex.addView(text("Database: 690 achievements / 7,110G from Halopedia (live icons + wiki links). Xbox sync reconciles toward the full ~700 — it adds any achievements your account has that this DB is missing.",9,T3,false));
         col.addView(ex);
 
+        LinearLayout fxc=card(); fxc.addView(text("🔊 SOUND & FX",9.5f,T2,true));
+        final TextView sfxBtn=text((sfxOn()?"🔊":"🔇")+" SFX  "+(sfxOn()?"ON":"OFF"),12,sfxOn()?GREEN:T3,true);
+        sfxBtn.setBackground(box(CARD2,sfxOn()?GREEN:LINE,6)); sfxBtn.setPadding(dp(14),dp(8),dp(14),dp(8));
+        LinearLayout.LayoutParams sflp=new LinearLayout.LayoutParams(-2,-2); sflp.topMargin=dp(8); sfxBtn.setLayoutParams(sflp);
+        sfxBtn.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ prefs.edit().putBoolean("sfxOn",!sfxOn()).apply(); if(sfxOn()) playTick(); show("more"); } });
+        fxc.addView(sfxBtn);
+        final TextView nBtn=text((notifOn()?"🔔":"🔕")+" Mission-complete chime  "+(notifOn()?"ON":"OFF"),12,notifOn()?GREEN:T3,true);
+        nBtn.setBackground(box(CARD2,notifOn()?GREEN:LINE,6)); nBtn.setPadding(dp(14),dp(8),dp(14),dp(8));
+        LinearLayout.LayoutParams nlp=new LinearLayout.LayoutParams(-2,-2); nlp.topMargin=dp(8); nBtn.setLayoutParams(nlp);
+        nBtn.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ prefs.edit().putBoolean("notifOn",!notifOn()).apply(); if(notifOn()) playNotify(); show("more"); } });
+        fxc.addView(nBtn);
+        fxc.addView(text("Original UNSC-style tones: a tick on every check, a fanfare on unlocks, and a chime when you 100% a game. Mute either anytime.",9,T3,false));
+        col.addView(fxc);
+
+        LinearLayout fbc=card(); fbc.addView(text("✉ FEEDBACK · FEATURE REQUEST",9.5f,T2,true));
+        TextView fbB=text("✉ EMAIL THE DEV",12,CYAN,true); fbB.setBackground(box(CARD2,CYAN,6)); fbB.setPadding(dp(16),dp(8),dp(16),dp(8));
+        LinearLayout.LayoutParams fblp=new LinearLayout.LayoutParams(-2,-2); fblp.topMargin=dp(8); fbB.setLayoutParams(fblp);
+        fbB.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
+            try{ Intent i=new Intent(Intent.ACTION_SENDTO,Uri.parse("mailto:floorloops@parliamentfour.com"));
+                i.putExtra(Intent.EXTRA_SUBJECT,"UNSC Terminal v"+appVer()+" — feature request");
+                i.putExtra(Intent.EXTRA_TEXT,"What I'd love to see in a future version:\n\n");
+                startActivity(Intent.createChooser(i,"Send feedback")); }
+            catch(Exception e){ Toast.makeText(MainActivity.this,"No email app found",Toast.LENGTH_SHORT).show(); } } });
+        fbc.addView(fbB);
+        fbc.addView(text("Ideas land with the dev and get built into future versions. (You can also drop them in the companion app's idea inbox.)",9,T3,false));
+        col.addView(fbc);
+
         LinearLayout rm=card(); rm.addView(text("🗺️ ROADMAP",9.5f,T2,true));
         String[][] RM={
             {"1","v1.0","Native app · ~690-achievement database (Halopedia) · real icons · guides"},
@@ -665,11 +765,11 @@ public class MainActivity extends Activity {
             {"1","v1.2.1","Difficulty-weighted time-to-completion (LASO ≈ 20h+, not 1h) · Xbox sync fills in any achievements your account has that the DB is missing"},
             {"1","v1.2.2","Fixed 2 dead easter-egg triggers (all 11 unlockable now) · undo accidental checks + reset-to-Xbox-sync (manual checking always works)"},
             {"0","v1.2.3","Exact 700/7000 DB reconciliation — bake the full TrueAchievements set into the static database (currently 690/7110)"},
-            {"0","v1.2.5","Native UI glow-up (match the web version)"},
-            {"0","v1.3","Career stats (medals, headshots…) · per-game icons · design pass · in-app feedback button → emails floorloops@parliamentfour.com directly"},
-            {"0","v1.3.5","Achievement artwork viewer (HQ images)"},
-            {"0","v1.4","Halo SFX & animations"},
-            {"0","v1.5","Notification sound · tweaks"},
+            {"1","v1.2.5","Native UI glow-up — HUD gradients, glow cards, accent rules, per-game icons & themed backdrops"},
+            {"1","v1.3","Career Dossier (service record, medals, time invested + live Xbox stats) · per-game icons · in-app feedback button → emails floorloops@parliamentfour.com"},
+            {"1","v1.3.5","Per-mission / per-map filter (campaign achievements) · full-res achievement artwork viewer · image-cache optimization"},
+            {"1","v1.4","Mutable UNSC-style SFX (check tick + unlock fanfare) · screen transitions & animations"},
+            {"1","v1.5","Mission-complete chime when you 100% a game · sound toggles · polish"},
             {"0","v1.6","Home-screen widgets"},
             {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
             {"0","v1.8","Walkthroughs · solution videos · screenshots"},
@@ -684,12 +784,36 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.2.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.5 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
     int countFlag(String f){ int n=0; for(JSONObject o:all) if(o.optBoolean(f)&&!done.contains(o.optString("id"))) n++; return n; }
     int countType(String ty){ int n=0; for(JSONObject o:all) if(ty.equals(o.optString("type"))&&!done.contains(o.optString("id"))) n++; return n; }
+
+    /* ===== v1.3 CAREER DOSSIER ===== */
+    LinearLayout careerCard(){
+        LinearLayout c=glowCard(GOLD);
+        c.addView(text("🎖️ CAREER DOSSIER",9.5f,GOLD,true));
+        int[] t=count(null); int pct=t[0]==0?0:100*t[1]/t[0];
+        c.addView(text("SERVICE RECORD",9,T3,true));
+        c.addView(text(rank(rankPct())[1]+"  ·  "+t[1]+"/"+t[0]+" ops cleared  ·  "+pct+"%",13,T1,true));
+        c.addView(text("gamerscore  "+t[3]+" / "+t[2]+" G",11.5f,GOLD,false));
+        double inv=0; for(JSONObject o:all) if(done.contains(o.optString("id"))) inv+=estHrs(o);
+        c.addView(text("time invested (est)  "+fmtHours(inv)+"   ·   "+fmtHours(timeLeft()[0])+" to 100%",11,T2,false));
+        c.addView(rule(GOLD));
+        c.addView(text("CAMPAIGN MEDALS",9,T3,true));
+        LinearLayout med=new LinearLayout(this); med.setOrientation(LinearLayout.HORIZONTAL); med.setPadding(0,dp(5),0,dp(2));
+        for(java.util.Map.Entry<String,JSONObject> e:games.entrySet()){ int[] gc=count(e.getKey()); if(gc[0]==0) continue;
+            int gp=100*gc[1]/gc[0]; String md=gp==100?"🥇":(gp>=50?"🥈":(gp>0?"🥉":"▫️"));
+            med.addView(text(gameIcon(e.getKey())+md+"  ",13.5f,T1,false)); }
+        c.addView(med);
+        c.addView(text("🥇 100%   🥈 50%+   🥉 started",8.5f,T3,false));
+        String cs=prefs.getString("careerStats","");
+        if(cs.length()>0){ c.addView(rule(CYAN)); c.addView(text("⚡ LIVE XBOX STATS",9,CYAN,true)); c.addView(text(cs,11,T2,false)); }
+        else c.addView(text("\n⚡ Paste your Grunt API key above + run an Xbox sync to layer live stats (gamertag, synced gamerscore) onto your dossier. Deeper combat stats — medals, kills, accuracy, playtime — light up here as that data source returns them for your gamertag.",9,T3,false));
+        return c;
+    }
 
 
     /* ===== icon loader ===== */
@@ -719,6 +843,7 @@ public class MainActivity extends Activity {
                 }
                 final android.graphics.Bitmap fb = bm;
                 if (fb != null) runOnUiThread(new Runnable() { public void run() {
+                    if (memCache.size() > 120) memCache.clear(); // v1.3.5 cap memory cache
                     memCache.put(url, fb);
                     if (url.equals(iv.getTag())) iv.setImageBitmap(fb); } });
             } catch (Exception e) {}
@@ -805,6 +930,7 @@ public class MainActivity extends Activity {
                 for (java.util.Map.Entry<String,String> e : times.entrySet()) unlockTimes.put(e.getKey(), e.getValue());
                 try{ JSONObject ut=new JSONObject(); for(java.util.Map.Entry<String,String> e:unlockTimes.entrySet()) ut.put(e.getKey(),e.getValue()); prefs.edit().putString("ut",ut.toString()).apply(); }catch(Exception e){}
                 bulkUnlock=true; saveSet(done, "done");
+                prefs.edit().putString("careerStats","Gamertag  "+(fgt!=null?fgt:"—")+"\nSynced gamerscore  "+gsDone()+" G\nSynced unlocks  "+done.size()).apply();
                 int beforeM=metas.size(); unlockMeta("ftsync"); checkMetas(); bulkUnlock=false;
                 int gainedM=metas.size()-beforeM;
                 Toast.makeText(MainActivity.this, "\u2714 "+(fgt!=null?fgt+": ":"")+"+" + fm + " synced \u00b7 +" + gainedM + " app achievements", Toast.LENGTH_LONG).show();
@@ -1013,6 +1139,7 @@ public class MainActivity extends Activity {
     }
 
     void playUnlock(final boolean egg){
+        if(!sfxOn()) return; // v1.4 mute respects SFX toggle
         POOL.execute(new Runnable(){ public void run(){ try{
             ToneGenerator tg=new ToneGenerator(AudioManager.STREAM_MUSIC,90);
             if(egg){ tg.startTone(ToneGenerator.TONE_PROP_BEEP,120); Thread.sleep(140);

@@ -5,7 +5,7 @@
 
 *Every achievement. Every game. One terminal.*
 
-![version](https://img.shields.io/badge/version-1.2.2-5c8a3a?style=for-the-badge)
+![version](https://img.shields.io/badge/version-1.5-5c8a3a?style=for-the-badge)
 ![platform](https://img.shields.io/badge/Android%20·%20native-2d5a87?style=for-the-badge)
 ![database](https://img.shields.io/badge/database-690%20·%207110G-d4a017?style=for-the-badge)
 ![sync](https://img.shields.io/badge/Xbox%20Live-sync-107c10?style=for-the-badge)
@@ -41,7 +41,7 @@
 
 | Channel | What you get |
 |---|---|
-| [**Releases**](../../releases) | `UNSCTerminal-v1.2.2.apk` — native Android app (sideload) |
+| [**Releases**](../../releases) | `UNSCTerminal-v1.5.apk` — native Android app (sideload) |
 | [**Web**](https://floorloops.github.io/halo-mcc-tracker/) | Browser version — desktop-friendly, same database lineage |
 | `src/` | Full source — single-file Java, zero dependencies, no-Gradle build |
 
@@ -55,11 +55,11 @@
 | **v1.2.2** | Fixed 2 dead easter-egg triggers (all 11 unlockable) · **undo accidental checks** + **reset-to-Xbox-sync** (manual checking always works) | ✅ shipped |
 | **v1.2.3** | Exact **700 / 7,000G** reconciliation — bake the full official TrueAchievements set into the static database (currently 690 / 7,110G) | 🔜 next |
 | **v1.2** | **Overhauled ranking** (XP-weighted — heavier achievements lift your rank more than flat %) · **choose your rank style: modern MCC / Halo 3 / Halo: Reach** · **Focus Mode** — "best next targets" ranked by gamerscore-per-hour · **smart breakdown** (closest game to 100%, easiest category to clear, XP earned) | ✅ shipped |
-| **v1.2.5** | **Native UI glow-up** — bring the native app up to the web version's look (UNSC HUD styling, glows, depth, polish) | planned |
-| **v1.3** | **Career stats** — medals, headshots, kills, accuracy, playtime pulled from Xbox/Halo stats API · per-game Halo icons · game-asset backgrounds + overall design pass · **in-app feedback button that emails feature requests straight to the dev** | planned |
-| **v1.3.5** | **Achievement artwork viewer** — tap to view the full high-res achievement art (requires scraping + bundling HQ image sets) · optimization & full review pass | planned |
-| **v1.4** | Halo SFX (mutable) · animations & transitions | planned |
-| **v1.5** | Packaged notification sound · minor tweaks | planned |
+| **v1.2.5** | **Native UI glow-up** — UNSC HUD gradients, glow cards, accent rules, per-game icons & game-accent themed backdrops | ✅ shipped |
+| **v1.3** | **Career Dossier** — service record, campaign medals, time invested + a live Xbox-stats layer (populates on sync) · per-game Halo icons · **in-app feedback button that emails feature requests straight to the dev** | ✅ shipped |
+| **v1.3.5** | **Per-mission / per-map filter** for campaign achievements · **full-res achievement artwork viewer** (tap → HQ art from Halopedia) · image-cache optimization | ✅ shipped |
+| **v1.4** | Mutable UNSC-style SFX (check tick + unlock fanfare) · screen transitions & animations | ✅ shipped |
+| **v1.5** | Mission-complete chime when you 100% a game · SFX/chime mute toggles · polish | ✅ shipped |
 | **v1.6** | Home-screen widgets | planned |
 | **v1.7** | General tips & pointers blended from YouTube / Halopedia / TrueAchievements | planned |
 | **v1.8** | Per-achievement written walkthroughs · solution videos · path/collectible screenshots | planned |
