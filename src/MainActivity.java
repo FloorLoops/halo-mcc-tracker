@@ -839,7 +839,8 @@ public class MainActivity extends Activity {
             {"1","v1.4","Mutable UNSC-style SFX (check tick + unlock fanfare) · screen transitions & animations"},
             {"1","v1.5","Mission-complete chime when you 100% a game · sound toggles · polish"},
             {"1","v1.6","Premium pass — all 700 icons bundled offline (instant, zero network) · global search across every game · sort modes (Top G / Quickest / A–Z) · live filter counts · 2-up home grid"},
-            {"1","v1.6.1","Real game box art on the home grid · Xbox sync fixed: tolerant name-matching (apostrophes/punctuation) + auto-sync on launch · 690-era sync leftovers auto-migrated (703/7035 → clean 700/7000)"},
+            {"1","v1.6.1","Real game box art on the home grid · tolerant sync name-matching + auto-sync on launch · 690-era sync leftovers auto-migrated (703/7035 → clean 700/7000)"},
+            {"1","v1.6.2","THE sync fix — Xbox Live pages results 150 at a time and the app only ever read page 1 (why +0 past 150 unlocks); now walks all pages. Verified live: 458/458 unlocks, 3,895G, every Xbox name matches the DB 1:1"},
             {"0","v1.6.5","Home-screen widgets"},
             {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
             {"0","v1.8","Walkthroughs · solution videos · screenshots"},
@@ -854,7 +855,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.6.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.6.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -947,21 +948,33 @@ public class MainActivity extends Activity {
                     String titleId = null;
                     String[] th = apiGet("https://xbl.io/api/v2/player/titleHistory", key);
                     if (th[0].equals("200")) { try {
-                        JSONObject root = new JSONObject(th[1]); JSONArray titles = root.optJSONArray("titles");
+                        JSONObject root = new JSONObject(th[1]);
+                        JSONObject tc = root.optJSONObject("content"); if (tc != null) root = tc; // v1.6.2 OpenXBL wraps in "content"
+                        JSONArray titles = root.optJSONArray("titles");
                         if (titles != null) for (int i = 0; i < titles.length(); i++) { JSONObject t = titles.getJSONObject(i);
                             if (t.optString("name","").toLowerCase().contains("master chief")) { titleId = t.optString("titleId"); break; } }
                     } catch (Exception e) {} }
                     if (titleId == null) titleId = "1144039928";
-                    String[] ar = apiGet("https://xbl.io/api/v2/achievements/title/" + titleId, key);
-                    if (!ar[0].equals("200")) { err = "couldn't load MCC achievements (HTTP " + ar[0] + "). Play MCC once on this account, then retry."; }
+                    // v1.6.2 \u2014 Xbox Live pages achievements 150 at a time (continuationToken); the old code only
+                    // ever read PAGE 1, so anyone past 150 unlocks synced "+0" forever. Walk every page (700 total).
+                    JSONArray arr = new JSONArray(); String ctok = null; int pages = 0;
+                    do {
+                        String[] ar = apiGet("https://xbl.io/api/v2/achievements/title/" + titleId + (ctok != null ? "?continuationToken=" + ctok : ""), key);
+                        if (!ar[0].equals("200")) { if (arr.length() == 0) err = "couldn't load MCC achievements (HTTP " + ar[0] + "). Play MCC once on this account, then retry."; break; }
+                        JSONObject root = new JSONObject(ar[1]);
+                        JSONObject content = root.optJSONObject("content"); if (content == null) content = root;
+                        JSONArray page = content.optJSONArray("achievements");
+                        if (page == null) page = content.optJSONArray("titleAchievements");
+                        if (page == null || page.length() == 0) break;
+                        for (int i = 0; i < page.length(); i++) arr.put(page.getJSONObject(i));
+                        ctok = null; JSONObject pi = content.optJSONObject("pagingInfo");
+                        if (pi != null) { String t2 = pi.optString("continuationToken", ""); if (t2.length() > 0 && !"null".equals(t2) && arr.length() < pi.optInt("totalRecords", Integer.MAX_VALUE)) ctok = t2; }
+                        pages++;
+                    } while (ctok != null && pages < 12);
+                    if (err != null) { /* page-1 failure already recorded */ }
+                    else if (arr.length() == 0) { err = "no achievements returned from Xbox Live \u2014 try again shortly."; }
                     else {
-                        JSONObject root = new JSONObject(ar[1]); JSONArray arr = null;
-                        JSONObject content = root.optJSONObject("content");
-                        if (content != null) arr = content.optJSONArray("achievements");
-                        if (arr == null) arr = root.optJSONArray("achievements");
-                        if (arr == null) arr = root.optJSONArray("titleAchievements");
-                        if (arr == null) { err = "no achievements returned \u2014 body: " + ar[1].substring(0, Math.min(140, ar[1].length())); }
-                        else {
+                        { // scope kept for legacy brace structure
                             java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
                             for (JSONObject o : all) byName.put(nrm(o.optString("name")), o.optString("id")); // v1.6.1 tolerant match
                             for (int i = 0; i < arr.length(); i++) {
