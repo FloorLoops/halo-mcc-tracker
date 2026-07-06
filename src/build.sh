@@ -16,6 +16,7 @@ OUT=build; rm -rf $OUT; mkdir -p $OUT/gen $OUT/classes $OUT/apk $OUT/res/mipmap-
 cp ic_launcher.png $OUT/res/mipmap-xxhdpi/ic_launcher.png
 cp data.json $OUT/assets/data.json
 [ -d icons ] && mkdir -p $OUT/assets/icons && cp icons/*.png $OUT/assets/icons/  # v1.6 bundled achievement art
+[ -d gameicons ] && mkdir -p $OUT/assets/gameicons && cp gameicons/*.png $OUT/assets/gameicons/  # v1.6.1 game box art
 
 # 1. resources
 "$BT/aapt2" compile --dir $OUT/res -o $OUT/res.zip

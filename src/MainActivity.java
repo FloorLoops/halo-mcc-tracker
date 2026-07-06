@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
     long lastCheckMs=0; String lastCheckedId=""; int checkBurst=0;
     boolean bulkUnlock=false;
     java.util.HashMap<String,String> unlockTimes = new java.util.HashMap<String,String>();
+    java.util.HashMap<String,String> idRemap = new java.util.HashMap<String,String>(); // v1.6.1 extra→canonical migrations
 
     static final int BG=0xFF0A0E13, BG2=0xFF0D1117, CARD=0xFF151C26, CARD2=0xFF1C2533, LINE=0xFF21303F;
     static final int CYAN=0xFF00B8E8, GREEN=0xFF39D353, GOLD=0xFFFFD54F, ORANGE=0xFFFF8A50, PURPLE=0xFFCE93D8;
@@ -115,7 +116,24 @@ public class MainActivity extends Activity {
             while(it.hasNext()){String k=it.next(); games.put(k,g.getJSONObject(k));}
             JSONArray a=rt.getJSONArray("achievements");
             for(int i=0;i<a.length();i++){JSONObject o=a.getJSONObject(i); all.add(o); totalGs+=o.optInt("gs");}
-            try{ JSONArray ex=new JSONArray(prefs.getString("extraAch","[]")); for(int i=0;i<ex.length();i++){ JSONObject o=ex.getJSONObject(i); all.add(o); totalGs+=o.optInt("gs"); } }catch(Exception e){}
+            // v1.6.1 — the static DB is now the complete 700: any Xbox-sync extras it now covers are
+            // DUPLICATES from the 690-era. Migrate their progress to the canonical entry, then drop them.
+            try{ JSONArray ex=new JSONArray(prefs.getString("extraAch","[]"));
+                java.util.HashMap<String,String> byN=new java.util.HashMap<String,String>();
+                for(JSONObject o:all) byN.put(nrm(o.optString("name")),o.optString("id"));
+                JSONArray keep=new JSONArray(); boolean changed=false;
+                for(int i=0;i<ex.length();i++){ JSONObject o=ex.getJSONObject(i);
+                    String canon=byN.get(nrm(o.optString("name")));
+                    if(canon!=null){ String oldId=o.optString("id");
+                        if(done.contains(oldId)){ done.remove(oldId); done.add(canon); }
+                        idRemap.put(oldId,canon); changed=true; continue; }
+                    all.add(o); totalGs+=o.optInt("gs"); keep.put(o); }
+                if(changed){ prefs.edit().putString("extraAch",keep.toString()).apply(); saveSet(done,"done");
+                    String sd=prefs.getString("syncedDone","");
+                    if(sd.length()>0){ StringBuilder nb=new StringBuilder();
+                        for(String x:sd.split(",")){ if(x.length()==0) continue; String m=idRemap.get(x); if(nb.length()>0) nb.append(','); nb.append(m!=null?m:x); }
+                        prefs.edit().putString("syncedDone",nb.toString()).apply(); } }
+            }catch(Exception e){}
         }catch(Exception e){}
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
@@ -129,17 +147,26 @@ public class MainActivity extends Activity {
         setContentView(overlay);
         loadSet(metas,"metas"); loadCsv(visitedGames,"vgames"); addAllMetas();
         try{ JSONObject ut=new JSONObject(prefs.getString("ut","{}")); java.util.Iterator<String> it=ut.keys(); while(it.hasNext()){ String k=it.next(); unlockTimes.put(k,ut.optString(k)); } }catch(Exception e){}
+        for(java.util.Map.Entry<String,String> em:idRemap.entrySet()){ String t=unlockTimes.remove(em.getKey()); if(t!=null) unlockTimes.put(em.getValue(),t); } // v1.6.1
         int h=java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
         if(h>=3 && h<4) unlockMeta("egg_cryo");
         String lastVer=prefs.getString("lastVer",""); String curVer=appVer();
         boolean updated = lastVer.length()>0 && !lastVer.equals(curVer);
         show("home"); checkMetas();
+        // v1.6.1 — auto-sync on launch (premium, key saved, ≥6h since last): your Xbox unlocks just appear
+        if(PREMIUM && prefs.getString("xblKey","").length()>0 && System.currentTimeMillis()-prefs.getLong("lastSync",0)>6*3600*1000L)
+            root.postDelayed(new Runnable(){ public void run(){ xboxSync(); } },1600);
         if(updated){ bulkUnlock=true; int before=metas.size(); checkMetas(); bulkUnlock=false; final int gained=metas.size()-before; final String fv=lastVer, tv=curVer;
             root.postDelayed(new Runnable(){ public void run(){ showUpdateReview(fv,tv,gained); } },800); }
         prefs.edit().putString("lastVer",curVer).apply();
         if(PREMIUM && !metas.contains("meta_king")){ metas.add("meta_king"); saveSet(metas,"metas"); root.postDelayed(new Runnable(){ public void run(){ grandUnlock("👑","King of the Hill","You own this. The Parliament bows."); } }, updated?2600:1200); }
     }
 
+    // v1.6.1 — tolerant name key: lowercase, straighten curly quotes, strip everything non-alphanumeric.
+    // Xbox Live and the wiki disagree on apostrophes/punctuation; exact string-matching silently dropped syncs.
+    static String nrm(String s){ if(s==null) return ""; s=s.replace('’','\'').replace('‘','\'').replace('“','"').replace('”','"');
+        StringBuilder b=new StringBuilder(); for(int i=0;i<s.length();i++){ char c=Character.toLowerCase(s.charAt(i));
+            if((c>='a'&&c<='z')||(c>='0'&&c<='9')) b.append(c); } return b.toString(); }
     void loadSet(Set<String> s,String key){ String v=prefs.getString(key,""); if(v.length()>0) for(String x:v.split(",")) s.add(x); }
     void loadCsv(java.util.HashSet<String> s,String key){ String v=prefs.getString(key,""); if(v.length()>0) for(String x:v.split(",")) s.add(x); }
     void saveCsv(java.util.HashSet<String> s,String key){ StringBuilder sb=new StringBuilder(); for(String x:s){ if(sb.length()>0) sb.append(','); sb.append(x);} prefs.edit().putString(key,sb.toString()).apply(); }
@@ -331,7 +358,14 @@ public class MainActivity extends Activity {
             gc.setBackground(gp==100?box(CARD,GREEN,9):glow(CARD2,CARD,accent,9));
             gc.setPadding(dp(12),dp(10),dp(12),dp(11));
             LinearLayout.LayoutParams celp=new LinearLayout.LayoutParams(0,-2,1f); if(gi%2==1) celp.leftMargin=dp(9); gc.setLayoutParams(celp);
-            gc.addView(text(gameIcon(gid)+" "+g.optString("name").replace("Halo: ","").replace("Halo ","H"),12.5f,T1,true));
+            LinearLayout hr=new LinearLayout(this); hr.setOrientation(LinearLayout.HORIZONTAL); hr.setGravity(Gravity.CENTER_VERTICAL);
+            android.widget.ImageView gart=new android.widget.ImageView(this); // v1.6.1 real box art
+            LinearLayout.LayoutParams galp=new LinearLayout.LayoutParams(dp(30),dp(30)); galp.rightMargin=dp(8); gart.setLayoutParams(galp);
+            gart.setBackground(box(BG2,LINE,6)); gart.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP); gart.setClipToOutline(true);
+            loadGameIcon(gid,gart); hr.addView(gart);
+            TextView gnm=text(g.optString("name").replace("Halo: ","").replace("Halo ","H"),12.5f,T1,true);
+            gnm.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); hr.addView(gnm);
+            gc.addView(hr);
             gc.addView(text(gp==100?"✔ 100%":gp+"%",21,gp==100?GREEN:accent,true));
             gc.addView(text(c[1]+"/"+c[0]+" · "+c[3]+"/"+c[2]+"G",9.5f,T2,false));
             gc.addView(bar(gp,gp==100?GREEN:accent));
@@ -597,6 +631,16 @@ public class MainActivity extends Activity {
             if(bm!=null) runOnUiThread(new Runnable(){ public void run(){ if(memCache.size()>120) memCache.clear(); memCache.put("full:"+url,bm); iv.setImageBitmap(bm); } });
         }catch(Exception e){} } }); }
 
+    /* ===== v1.6.1 real game art (assets/gameicons/<gid>.png, official box art) ===== */
+    void loadGameIcon(final String gid, final android.widget.ImageView iv){
+        final String key="g:"+gid; android.graphics.Bitmap c=memCache.get(key);
+        if(c!=null){ iv.setImageBitmap(c); return; }
+        POOL.execute(new Runnable(){ public void run(){ try{
+            java.io.InputStream in=getAssets().open("gameicons/"+gid+".png");
+            final android.graphics.Bitmap bm=android.graphics.BitmapFactory.decodeStream(in); in.close();
+            if(bm!=null) runOnUiThread(new Runnable(){ public void run(){ memCache.put(key,bm); iv.setImageBitmap(bm); } });
+        }catch(Exception e){} } });
+    }
     void visitGame(String gid){ visitedGames.add(gid); saveCsv(visitedGames,"vgames"); int g=0; for(java.util.Map.Entry<String,JSONObject> e:games.entrySet()){ int[] c=count(e.getKey()); if(c[0]>0) g++; } if(visitedGames.size()>=g) unlockMeta("egg_library"); }
 
     /* ===== PINS ===== */
@@ -795,6 +839,7 @@ public class MainActivity extends Activity {
             {"1","v1.4","Mutable UNSC-style SFX (check tick + unlock fanfare) · screen transitions & animations"},
             {"1","v1.5","Mission-complete chime when you 100% a game · sound toggles · polish"},
             {"1","v1.6","Premium pass — all 700 icons bundled offline (instant, zero network) · global search across every game · sort modes (Top G / Quickest / A–Z) · live filter counts · 2-up home grid"},
+            {"1","v1.6.1","Real game box art on the home grid · Xbox sync fixed: tolerant name-matching (apostrophes/punctuation) + auto-sync on launch · 690-era sync leftovers auto-migrated (703/7035 → clean 700/7000)"},
             {"0","v1.6.5","Home-screen widgets"},
             {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
             {"0","v1.8","Walkthroughs · solution videos · screenshots"},
@@ -809,7 +854,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.6 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.6.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -918,11 +963,11 @@ public class MainActivity extends Activity {
                         if (arr == null) { err = "no achievements returned \u2014 body: " + ar[1].substring(0, Math.min(140, ar[1].length())); }
                         else {
                             java.util.HashMap<String, String> byName = new java.util.HashMap<String, String>();
-                            for (JSONObject o : all) byName.put(o.optString("name").trim().toLowerCase(), o.optString("id"));
+                            for (JSONObject o : all) byName.put(nrm(o.optString("name")), o.optString("id")); // v1.6.1 tolerant match
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject a = arr.getJSONObject(i);
                                 String nm = a.optString("name").trim(); if (nm.length()==0) continue;
-                                String nkey = nm.toLowerCase();
+                                String nkey = nrm(nm);
                                 String id = byName.get(nkey);
                                 if (id == null) {
                                     String nid = "xbl_" + Integer.toHexString(nkey.hashCode());
@@ -963,6 +1008,7 @@ public class MainActivity extends Activity {
                 for (java.util.Map.Entry<String,String> e : times.entrySet()) unlockTimes.put(e.getKey(), e.getValue());
                 try{ JSONObject ut=new JSONObject(); for(java.util.Map.Entry<String,String> e:unlockTimes.entrySet()) ut.put(e.getKey(),e.getValue()); prefs.edit().putString("ut",ut.toString()).apply(); }catch(Exception e){}
                 bulkUnlock=true; saveSet(done, "done");
+                prefs.edit().putLong("lastSync",System.currentTimeMillis()).apply(); // v1.6.1
                 prefs.edit().putString("careerStats","Gamertag  "+(fgt!=null?fgt:"—")+"\nSynced gamerscore  "+gsDone()+" G\nSynced unlocks  "+done.size()).apply();
                 int beforeM=metas.size(); unlockMeta("ftsync"); checkMetas(); bulkUnlock=false;
                 int gainedM=metas.size()-beforeM;
