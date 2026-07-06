@@ -15,6 +15,7 @@ PKG_PATH=four/parliament/halotracker
 OUT=build; rm -rf $OUT; mkdir -p $OUT/gen $OUT/classes $OUT/apk $OUT/res/mipmap-xxhdpi $OUT/assets
 cp ic_launcher.png $OUT/res/mipmap-xxhdpi/ic_launcher.png
 cp data.json $OUT/assets/data.json
+[ -d icons ] && mkdir -p $OUT/assets/icons && cp icons/*.png $OUT/assets/icons/  # v1.6 bundled achievement art
 
 # 1. resources
 "$BT/aapt2" compile --dir $OUT/res -o $OUT/res.zip

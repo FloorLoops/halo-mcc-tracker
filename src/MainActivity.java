@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
     Set<String> done=new HashSet<String>(); Set<String> pins=new HashSet<String>();
     SharedPreferences prefs;
     int totalGs=0;
-    String tab="home", curGame="ce", fStatus="ALL", fType="all", query="", fMission="";
+    String tab="home", curGame="ce", fStatus="ALL", fType="all", query="", fMission="", fSort="default"; // v1.6 fSort
     long sessionBase=0; int sessionChecks=0;
     LinearLayout root, content; AchAdapter adapter;
     TextView[] navBtns=new TextView[4];
@@ -276,7 +276,7 @@ public class MainActivity extends Activity {
         oc.addView(text(t[1]+" / "+t[0]+"  ·  "+pct+"%",23,GREEN,true));
         oc.addView(text("GAMERSCORE  "+t[3]+" / "+t[2]+" G",12,GOLD,false));
         oc.addView(bar(pct,GREEN));
-        oc.addView(text("official database · 690 achievements · Halopedia import",8.5f,T3,false));
+        oc.addView(text("complete official database · 700 achievements / 7,000G · icons bundled offline",8.5f,T3,false));
         col.addView(oc);
 
         // v1.2 — FOCUS MODE: smart "what should I do next" + best-value targets
@@ -314,19 +314,31 @@ public class MainActivity extends Activity {
             col.addView(fc);
         }
 
-        for(Map.Entry<String,JSONObject> e:games.entrySet()){
-            final String gid=e.getKey(); JSONObject g=e.getValue();
-            int[] c=count(gid); if(c[0]==0) continue; int gp=100*c[1]/c[0];
+        // v1.6 — campaign ledger: 2-up game grid (half the scrolling, per-game accent glow)
+        TextView glabel=text("CAMPAIGN LEDGER",9.5f,T2,true);
+        LinearLayout.LayoutParams gllp=new LinearLayout.LayoutParams(-1,-2); gllp.topMargin=dp(14); glabel.setLayoutParams(gllp);
+        col.addView(glabel);
+        java.util.List<String> gids=new java.util.ArrayList<String>();
+        for(Map.Entry<String,JSONObject> e:games.entrySet()){ int[] c=count(e.getKey()); if(c[0]>0) gids.add(e.getKey()); }
+        LinearLayout grow=null;
+        for(int gi=0; gi<gids.size(); gi++){
+            final String gid=gids.get(gi); JSONObject g=games.get(gid);
+            int[] c=count(gid); int gp=100*c[1]/c[0];
             int accent=Color.parseColor(g.optString("color","#00b8e8"));
-            LinearLayout gc=card(); if(gp==100) gc.setBackground(box(CARD,GREEN,8));
-            LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
-            TextView nm=text(gameIcon(gid)+" "+g.optString("name"),15,T1,true); nm.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); row.addView(nm);
-            row.addView(text(gp==100?"✔ 100%":gp+"%",14,gp==100?GREEN:accent,true));
-            gc.addView(row);
-            gc.addView(text(g.optString("year")+" · "+c[1]+"/"+c[0]+" · "+c[3]+"/"+c[2]+" G",10,T2,false));
-            gc.addView(bar(gp,accent));
+            if(gi%2==0){ grow=new LinearLayout(this); grow.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams grlp=new LinearLayout.LayoutParams(-1,-2); grlp.topMargin=dp(9); grow.setLayoutParams(grlp); col.addView(grow); }
+            LinearLayout gc=new LinearLayout(this); gc.setOrientation(LinearLayout.VERTICAL);
+            gc.setBackground(gp==100?box(CARD,GREEN,9):glow(CARD2,CARD,accent,9));
+            gc.setPadding(dp(12),dp(10),dp(12),dp(11));
+            LinearLayout.LayoutParams celp=new LinearLayout.LayoutParams(0,-2,1f); if(gi%2==1) celp.leftMargin=dp(9); gc.setLayoutParams(celp);
+            gc.addView(text(gameIcon(gid)+" "+g.optString("name").replace("Halo: ","").replace("Halo ","H"),12.5f,T1,true));
+            gc.addView(text(gp==100?"✔ 100%":gp+"%",21,gp==100?GREEN:accent,true));
+            gc.addView(text(c[1]+"/"+c[0]+" · "+c[3]+"/"+c[2]+"G",9.5f,T2,false));
+            gc.addView(bar(gp,gp==100?GREEN:accent));
             gc.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ curGame=gid; fMission=""; visitGame(gid); show("games"); } });
-            col.addView(gc); }
+            grow.addView(gc); }
+        if(gids.size()%2==1 && grow!=null){ View sp=new View(this);
+            LinearLayout.LayoutParams splp=new LinearLayout.LayoutParams(0,dp(1),1f); splp.leftMargin=dp(9); sp.setLayoutParams(splp); grow.addView(sp); }
         final TextView foot=text("\n◇ FOR PERSONAL GLORY ◇",9.5f,T3,false); foot.setGravity(Gravity.CENTER);
         foot.setOnClickListener(new View.OnClickListener(){ long w=0; public void onClick(View v){ long now=System.currentTimeMillis(); if(now-w>1600){ footerTaps=0; } w=now; if(++footerTaps>=4 && pins.size()==4){ footerTaps=0; unlockMeta("egg_parliament"); } } });
         col.addView(foot);
@@ -415,7 +427,7 @@ public class MainActivity extends Activity {
         col.addView(hs);
 
         EditText search=new EditText(this);
-        search.setHint("🔎 search achievements…"); search.setText(query);
+        search.setHint("🔎 search all 700 achievements…"); search.setText(query); // v1.6 global
         search.setHintTextColor(T3); search.setTextColor(T1); search.setTextSize(13);
         search.setTypeface(Typeface.MONOSPACE); search.setBackground(box(BG2,LINE,8));
         search.setPadding(dp(12),dp(10),dp(12),dp(10)); search.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -428,14 +440,26 @@ public class MainActivity extends Activity {
 
         LinearLayout frow=new LinearLayout(this); frow.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams flp=new LinearLayout.LayoutParams(-1,-2); flp.topMargin=dp(8); frow.setLayoutParams(flp);
-        String[] fs={"ALL","TODO","DONE"};
+        int[] cg=count(curGame); // v1.6 — live counts on the status chips
+        String[] fs={"ALL","TODO","DONE"}; int[] fn={cg[0],cg[0]-cg[1],cg[1]};
         for(int i=0;i<3;i++){ final String f=fs[i]; boolean on=f.equals(fStatus);
-            TextView fb=text(f,11.5f,on?CYAN:T2,true); fb.setGravity(Gravity.CENTER);
+            TextView fb=text(f+" "+fn[i],11.5f,on?CYAN:T2,true); fb.setGravity(Gravity.CENTER);
             fb.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,6)); fb.setPadding(0,dp(8),0,dp(8));
             LinearLayout.LayoutParams blp=new LinearLayout.LayoutParams(0,-2,1f); if(i>0) blp.leftMargin=dp(6); fb.setLayoutParams(blp);
             fb.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ fStatus=f; show("games"); } });
             frow.addView(fb); }
         col.addView(frow);
+        // v1.6 — sort row: recommended order · biggest G first · quickest first · A–Z
+        LinearLayout sortRow=new LinearLayout(this); sortRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams solp=new LinearLayout.LayoutParams(-1,-2); solp.topMargin=dp(7); sortRow.setLayoutParams(solp);
+        String[][] sorts={{"default","ORDER"},{"gs","TOP G"},{"time","QUICKEST"},{"az","A–Z"}};
+        for(int i=0;i<sorts.length;i++){ final String sid=sorts[i][0]; boolean on=sid.equals(fSort);
+            TextView sb2=text(sorts[i][1],10,on?GOLD:T3,on); sb2.setGravity(Gravity.CENTER);
+            sb2.setBackground(box(on?CARD2:BG2,on?GOLD:LINE,6)); sb2.setPadding(0,dp(7),0,dp(7));
+            LinearLayout.LayoutParams sblp=new LinearLayout.LayoutParams(0,-2,1f); if(i>0) sblp.leftMargin=dp(6); sb2.setLayoutParams(sblp);
+            sb2.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ fSort=sid; show("games"); } });
+            sortRow.addView(sb2); }
+        col.addView(sortRow);
 
         HorizontalScrollView ts=new HorizontalScrollView(this); ts.setHorizontalScrollBarEnabled(false);
         LinearLayout trow=new LinearLayout(this); trow.setOrientation(LinearLayout.HORIZONTAL); ts.addView(trow);
@@ -727,7 +751,7 @@ public class MainActivity extends Activity {
                 .setNegativeButton("CANCEL",null).show(); } });
         ex.addView(rs);
         ex.addView(text("Tap any achievement to check/uncheck it yourself anytime — even when synced. “Reset” only undoes accidental checks back to your Xbox state.",8.5f,T3,false));
-        ex.addView(text("Database: 690 achievements / 7,110G from Halopedia (live icons + wiki links). Xbox sync reconciles toward the full ~700 — it adds any achievements your account has that this DB is missing.",9,T3,false));
+        ex.addView(text("Database: the complete official set — 700 achievements / 7,000G (Halopedia-sourced, cross-verified against Xbox Live; 14 wiki gamerscore errors corrected). All 700 icons ship inside the app. Xbox sync still adds anything new Microsoft ever ships.",9,T3,false));
         col.addView(ex);
 
         LinearLayout fxc=card(); fxc.addView(text("🔊 SOUND & FX",9.5f,T2,true));
@@ -764,13 +788,14 @@ public class MainActivity extends Activity {
             {"1","v1.2","XP-weighted ranking overhaul · choose rank style: MCC / Halo 3 / Reach · focus mode (best next targets) · smart breakdowns"},
             {"1","v1.2.1","Difficulty-weighted time-to-completion (LASO ≈ 20h+, not 1h) · Xbox sync fills in any achievements your account has that the DB is missing"},
             {"1","v1.2.2","Fixed 2 dead easter-egg triggers (all 11 unlockable now) · undo accidental checks + reset-to-Xbox-sync (manual checking always works)"},
-            {"0","v1.2.3","Exact 700/7000 DB reconciliation — bake the full TrueAchievements set into the static database (currently 690/7110)"},
+            {"1","v1.2.3","Exact 700/7000 database — full official set baked in, verified against live Xbox data (10 missing Halo 3 achievements added, 14 wiki gamerscore errors fixed)"},
             {"1","v1.2.5","Native UI glow-up — HUD gradients, glow cards, accent rules, per-game icons & themed backdrops"},
             {"1","v1.3","Career Dossier (service record, medals, time invested + live Xbox stats) · per-game icons · in-app feedback button → emails floorloops@parliamentfour.com"},
             {"1","v1.3.5","Per-mission / per-map filter (campaign achievements) · full-res achievement artwork viewer · image-cache optimization"},
             {"1","v1.4","Mutable UNSC-style SFX (check tick + unlock fanfare) · screen transitions & animations"},
             {"1","v1.5","Mission-complete chime when you 100% a game · sound toggles · polish"},
-            {"0","v1.6","Home-screen widgets"},
+            {"1","v1.6","Premium pass — all 700 icons bundled offline (instant, zero network) · global search across every game · sort modes (Top G / Quickest / A–Z) · live filter counts · 2-up home grid"},
+            {"0","v1.6.5","Home-screen widgets"},
             {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
             {"0","v1.8","Walkthroughs · solution videos · screenshots"},
             {"0","v1.9","Optimal completion-order + LASO routing"},
@@ -784,7 +809,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.5 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.6 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
@@ -819,33 +844,41 @@ public class MainActivity extends Activity {
     /* ===== icon loader ===== */
     static final java.util.concurrent.ExecutorService POOL = java.util.concurrent.Executors.newFixedThreadPool(4);
     final java.util.HashMap<String, android.graphics.Bitmap> memCache = new java.util.HashMap<String, android.graphics.Bitmap>();
-    void loadIcon(final String url, final android.widget.ImageView iv) {
-        iv.setTag(url);
-        android.graphics.Bitmap c = memCache.get(url);
+    void loadIcon(final String aid, final String url, final android.widget.ImageView iv) {
+        final String key = (aid != null && aid.length() > 0) ? "a:" + aid : url;
+        iv.setTag(key);
+        android.graphics.Bitmap c = memCache.get(key);
         if (c != null) { iv.setImageBitmap(c); return; }
         iv.setImageBitmap(null);
         POOL.execute(new Runnable() { public void run() {
             try {
-                String fn = "ic_" + Integer.toHexString(url.hashCode());
-                java.io.File f = new java.io.File(getCacheDir(), fn);
                 android.graphics.Bitmap bm = null;
-                if (f.exists() && f.length() > 0) bm = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
-                if (bm == null) {
-                    java.net.HttpURLConnection c2 = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
-                    c2.setConnectTimeout(8000); c2.setReadTimeout(10000);
-                    c2.setRequestProperty("User-Agent", "UNSC-Terminal-personal/1.0");
-                    java.io.InputStream in = c2.getInputStream();
-                    java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
-                    byte[] b = new byte[8192]; int r;
-                    while ((r = in.read(b)) > 0) fo.write(b, 0, r);
-                    fo.close(); in.close();
-                    bm = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+                // v1.6 — all 700 icons ship inside the APK (assets/icons/<id>.png): instant, offline, zero network
+                if (aid != null && aid.length() > 0) {
+                    try { java.io.InputStream ain = getAssets().open("icons/" + aid + ".png");
+                        bm = android.graphics.BitmapFactory.decodeStream(ain); ain.close(); } catch (Exception e) {}
+                }
+                if (bm == null && url != null && url.length() > 0) {
+                    String fn = "ic_" + Integer.toHexString(url.hashCode());
+                    java.io.File f = new java.io.File(getCacheDir(), fn);
+                    if (f.exists() && f.length() > 0) bm = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+                    if (bm == null) {
+                        java.net.HttpURLConnection c2 = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                        c2.setConnectTimeout(8000); c2.setReadTimeout(10000);
+                        c2.setRequestProperty("User-Agent", "UNSC-Terminal-personal/1.0");
+                        java.io.InputStream in = c2.getInputStream();
+                        java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
+                        byte[] b = new byte[8192]; int r;
+                        while ((r = in.read(b)) > 0) fo.write(b, 0, r);
+                        fo.close(); in.close();
+                        bm = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+                    }
                 }
                 final android.graphics.Bitmap fb = bm;
                 if (fb != null) runOnUiThread(new Runnable() { public void run() {
                     if (memCache.size() > 120) memCache.clear(); // v1.3.5 cap memory cache
-                    memCache.put(url, fb);
-                    if (url.equals(iv.getTag())) iv.setImageBitmap(fb); } });
+                    memCache.put(key, fb);
+                    if (key.equals(iv.getTag())) iv.setImageBitmap(fb); } });
             } catch (Exception e) {}
         } });
     }
@@ -974,6 +1007,7 @@ public class MainActivity extends Activity {
         metaDef("d600","done:600","🧗","Almost There","Unlock any 600 MCC achievements",false);
         metaDef("d650","done:650","🏁","Home Stretch","Unlock any 650 MCC achievements",false);
         metaDef("d690","done:690","👑","Completionist","Unlock any 690 MCC achievements",false);
+        metaDef("d700","done:700","🏆","The Full Seven Hundred","Unlock ALL 700 MCC achievements — total victory",false);
         metaDef("gs250","gs:250","🪙","Pocket Change","Earn 250G of Gamerscore",false);
         metaDef("gs500","gs:500","💰","Coin Collector","Earn 500G of Gamerscore",false);
         metaDef("gs1000","gs:1000","🎮","GS Grinder","Earn 1000G of Gamerscore",false);
@@ -983,7 +1017,7 @@ public class MainActivity extends Activity {
         metaDef("gs5000","gs:5000","🎖️","GS General","Earn 5000G of Gamerscore",false);
         metaDef("gs6000","gs:6000","🔢","Number Cruncher","Earn 6000G of Gamerscore",false);
         metaDef("gs7000","gs:7000","🆙","Maxed Out","Earn 7000G of Gamerscore",false);
-        metaDef("gs7110","gs:7110","🏆","Perfect Score","Earn 7110G of Gamerscore",false);
+        metaDef("gs7110","gs:7000","🏆","Perfect Score","Earn the maximum 7,000G — every point MCC has",false);
         metaDef("g1ce","g1:ce","🎬","First Step: CE Anniversary","Unlock your first CE Anniversary achievement",false);
         metaDef("g1h2","g1:h2","🎬","First Step: Halo 2","Unlock your first Halo 2 achievement",false);
         metaDef("g1h3","g1:h3","🎬","First Step: Halo 3","Unlock your first Halo 3 achievement",false);
@@ -1219,19 +1253,27 @@ public class MainActivity extends Activity {
         boolean pinMode; List<JSONObject> items=new ArrayList<JSONObject>();
         AchAdapter(boolean pinMode){ this.pinMode=pinMode; }
         void refilter(){ items.clear();
+            boolean global = !pinMode && query.length()>0; // v1.6 — typing searches ALL games, not just the open one
             for(JSONObject o:all){
                 String aid=o.optString("id");
                 if(pinMode){ if(!pins.contains(aid)) continue; }
                 else {
-                    if(!curGame.equals(o.optString("game"))) continue;
+                    if(!global && !curGame.equals(o.optString("game"))) continue;
                     boolean d=done.contains(aid);
                     if(fStatus.equals("TODO")&&d) continue;
                     if(fStatus.equals("DONE")&&!d) continue;
                     if(!fType.equals("all")&&!fType.equals(o.optString("type"))) continue;
-                    if(fMission.length()>0&&!fMission.equals(o.optString("mission",""))) continue;
+                    if(!global && fMission.length()>0&&!fMission.equals(o.optString("mission",""))) continue;
                     if(query.length()>0&&!(o.optString("name")+" "+o.optString("desc")).toLowerCase().contains(query)) continue;
                 }
                 items.add(o); }
+            if(!pinMode && !fSort.equals("default")){ // v1.6 sort modes
+                java.util.Collections.sort(items,new java.util.Comparator<JSONObject>(){
+                    public int compare(JSONObject a,JSONObject b){
+                        if(fSort.equals("gs")){ int r=b.optInt("gs")-a.optInt("gs"); return r!=0?r:a.optString("name").compareToIgnoreCase(b.optString("name")); }
+                        if(fSort.equals("time")){ double x=estHrs(a),y=estHrs(b); return x<y?-1:(x>y?1:a.optString("name").compareToIgnoreCase(b.optString("name"))); }
+                        return a.optString("name").compareToIgnoreCase(b.optString("name")); } });
+            }
             notifyDataSetChanged(); }
         public int getCount(){ return items.size(); }
         public Object getItem(int i){ return items.get(i); }
@@ -1264,11 +1306,12 @@ public class MainActivity extends Activity {
                 +("speed".equals(o.optString("type"))?" ⏱":(o.optBoolean("missable")?" ⚠":""))
                 +(o.optBoolean("coop")?" 👥":"");
             nm.setText(o.optString("icon")+" "+o.optString("name")+badges); nm.setTextColor(d?T2:T1);
-            ds.setText((pinMode?("["+games.get(o.optString("game")).optString("name")+"]  "):"")+o.optString("desc")); ds.setTextColor(d?T3:T2);
+            boolean tagGame = pinMode || query.length()>0; // v1.6 — global search results show their game
+            ds.setText((tagGame?("["+gameName(o.optString("game")).replace("Halo: ","").replace("Halo ","H")+"]  "):"")+o.optString("desc")); ds.setTextColor(d?T3:T2);
             gs.setText(o.optInt("gs")+"G"); gs.setTextColor(d?GREEN:GOLD);
             String iu=o.optString("img","");
-            if(iu.length()>0){
-                loadIcon(iu,img);
+            if(iu.length()>0||o.optString("id").length()>0){
+                loadIcon(o.optString("id"),iu,img);
                 if(d){ img.clearColorFilter(); img.setImageAlpha(255); }
                 else { android.graphics.ColorMatrix cm=new android.graphics.ColorMatrix(); cm.setSaturation(0f);
                     img.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm)); img.setImageAlpha(135); }
