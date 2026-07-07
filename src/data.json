@@ -1768,7 +1768,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Iron",
    "id": "ce_148",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Pillar of Autumn"
   },
   {
    "game": "ce",
@@ -1779,7 +1780,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Mythic",
    "id": "ce_149",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Halo"
   },
   {
    "game": "ce",
@@ -1790,7 +1792,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Boom",
    "id": "ce_150",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Halo"
   },
   {
    "game": "ce",
@@ -1801,7 +1804,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Foreign",
    "id": "ce_151",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Truth and Reconciliation"
   },
   {
    "game": "ce",
@@ -1812,7 +1816,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Famine",
    "id": "ce_152",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Silent Cartographer"
   },
   {
    "game": "ce",
@@ -1823,7 +1828,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Bandana",
    "id": "ce_153",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Silent Cartographer"
   },
   {
    "game": "ce",
@@ -1834,7 +1840,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Fog",
    "id": "ce_154",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Assault on the Control Room"
   },
   {
    "game": "ce",
@@ -1845,7 +1852,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Malfunction",
    "id": "ce_155",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Assault on the Control Room"
   },
   {
    "game": "ce",
@@ -1856,7 +1864,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Recession",
    "id": "ce_156",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "343 Guilty Spark"
   },
   {
    "game": "ce",
@@ -1867,7 +1876,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Black_Eye",
    "id": "ce_157",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Library"
   },
   {
    "game": "ce",
@@ -1878,7 +1888,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Eye_Patch",
    "id": "ce_158",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Library"
   },
   {
    "game": "ce",
@@ -1889,7 +1900,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Pinata",
    "id": "ce_159",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Two Betrayals"
   },
   {
    "game": "ce",
@@ -1900,7 +1912,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo:_CE:_Grunt_Birthday_Party",
    "id": "ce_160",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Maw"
   },
   {
    "game": "ce",
@@ -2144,7 +2157,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_That's_Just..._Wrong",
    "id": "h2_181",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Armory"
   },
   {
    "game": "h2",
@@ -2155,7 +2169,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Thunderstorm",
    "id": "h2_182",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Cairo Station"
   },
   {
    "game": "h2",
@@ -2166,7 +2181,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Blind",
    "id": "h2_183",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Outskirts"
   },
   {
    "game": "h2",
@@ -2177,7 +2193,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_IWHBYD",
    "id": "h2_184",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Outskirts"
   },
   {
    "game": "h2",
@@ -2188,7 +2205,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Catch",
    "id": "h2_185",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Metropolis"
   },
   {
    "game": "h2",
@@ -2199,7 +2217,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Grunt_Birthday_Party",
    "id": "h2_186",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Arbiter"
   },
   {
    "game": "h2",
@@ -2210,7 +2229,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Famine",
    "id": "h2_187",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Oracle"
   },
   {
    "game": "h2",
@@ -2221,7 +2241,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Envy",
    "id": "h2_188",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Delta Halo"
   },
   {
    "game": "h2",
@@ -2232,7 +2253,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Assassins",
    "id": "h2_189",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Regret"
   },
   {
    "game": "h2",
@@ -2243,7 +2265,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Mythic",
    "id": "h2_190",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Sacred Icon"
   },
   {
    "game": "h2",
@@ -2254,7 +2277,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Sputnik",
    "id": "h2_191",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Quarantine Zone"
   },
   {
    "game": "h2",
@@ -2265,7 +2289,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Anger",
    "id": "h2_192",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Gravemind"
   },
   {
    "game": "h2",
@@ -2276,7 +2301,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Ghost",
    "id": "h2_193",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Uprising"
   },
   {
    "game": "h2",
@@ -2287,7 +2313,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Iron",
    "id": "h2_194",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "High Charity"
   },
   {
    "game": "h2",
@@ -2298,7 +2325,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_2:_Black_Eye",
    "id": "h2_195",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Great Journey"
   },
   {
    "game": "h2",
@@ -4214,7 +4242,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Iron",
    "id": "h3_453",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Sierra 117"
   },
   {
    "game": "h3",
@@ -4225,7 +4254,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Black_Eye",
    "id": "h3_454",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Crow's Nest"
   },
   {
    "game": "h3",
@@ -4236,7 +4266,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Tough_Luck",
    "id": "h3_455",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Tsavo Highway"
   },
   {
    "game": "h3",
@@ -4247,7 +4278,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Catch",
    "id": "h3_456",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Storm"
   },
   {
    "game": "h3",
@@ -4258,7 +4290,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Fog",
    "id": "h3_457",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Floodgate"
   },
   {
    "game": "h3",
@@ -4269,7 +4302,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Famine",
    "id": "h3_458",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Ark"
   },
   {
    "game": "h3",
@@ -4280,7 +4314,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Thunderstorm",
    "id": "h3_459",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Covenant"
   },
   {
    "game": "h3",
@@ -4291,7 +4326,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Tilt",
    "id": "h3_460",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Cortana"
   },
   {
    "game": "h3",
@@ -4302,7 +4338,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Mythic",
    "id": "h3_461",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Halo"
   },
   {
    "game": "h3",
@@ -4313,7 +4350,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Blind",
    "id": "h3_462",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Sierra 117"
   },
   {
    "game": "h3",
@@ -4324,7 +4362,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Grunt_Birthday_Party",
    "id": "h3_463",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Crow's Nest"
   },
   {
    "game": "h3",
@@ -4335,7 +4374,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_Cowbell",
    "id": "h3_464",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Ark"
   },
   {
    "game": "h3",
@@ -4346,7 +4386,8 @@
    "wiki": "https://www.halopedia.org/Skulltaker_Halo_3:_IWHBYD",
    "id": "h3_465",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "The Covenant"
   },
   {
    "game": "h3",
@@ -4946,7 +4987,8 @@
    "wiki": "https://www.halopedia.org/Assembly_Skull_(achievement)",
    "id": "h3_509",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Assembly (MP)"
   },
   {
    "game": "h3",
@@ -4957,7 +4999,8 @@
    "wiki": "https://www.halopedia.org/Orbital_Skull_(achievement)",
    "id": "h3_new8",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Orbital (MP)"
   },
   {
    "game": "h3",
@@ -4968,7 +5011,8 @@
    "wiki": "https://www.halopedia.org/Sandbox_Skull_(achievement)",
    "id": "h3_new9",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Sandbox (MP)"
   },
   {
    "game": "h3",
@@ -4979,7 +5023,8 @@
    "wiki": "https://www.halopedia.org/Citadel_Skull_(achievement)",
    "id": "h3_510",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Citadel (MP)"
   },
   {
    "game": "h3",
@@ -4990,7 +5035,8 @@
    "wiki": "https://www.halopedia.org/Heretic_Skull_(achievement)",
    "id": "h3_511",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Heretic (MP)"
   },
   {
    "game": "h3",
@@ -5001,7 +5047,8 @@
    "wiki": "https://www.halopedia.org/Longshore_Skull_(achievement)",
    "id": "h3_512",
    "icon": "🎖️",
-   "type": "skull"
+   "type": "skull",
+   "mission": "Longshore (MP)"
   },
   {
    "game": "h3",
