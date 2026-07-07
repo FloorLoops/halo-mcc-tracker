@@ -23,8 +23,9 @@ Copy-Item ic_launcher.png "$OUT\res\mipmap-xxhdpi\ic_launcher.png"
 
 # 2. compile (javac; source/target 8 to match ecj build — no lambdas in source anyway)
 & javac -source 8 -target 8 -encoding UTF-8 -nowarn -bootclasspath "$AJ" -d "$OUT\classes" "$OUT\gen\$PKG\R.java" MainActivity.java
-$classes = Get-ChildItem "$OUT\classes" -Recurse -Filter *.class | ForEach-Object { $_.FullName }
-& "$BT8\d8.bat" --min-api 26 --lib "$AJ" --release --output "$OUT\apk" $classes
+# jar the classes so d8 takes ONE input (Windows command line overflows with 60+ .class paths)
+Push-Location "$OUT\classes"; & jar cf "..\classes.jar" .; Pop-Location
+& "$BT8\d8.bat" --min-api 26 --lib "$AJ" --release --output "$OUT\apk" "$OUT\classes.jar"
 if(-not (Test-Path "$OUT\apk\classes.dex")){ throw "d8 produced no classes.dex" }
 
 # 3. assemble — inject classes.dex + all assets with EXPLICIT forward-slash entry names
@@ -36,17 +37,20 @@ Add-Entry $apk "$OUT\apk\classes.dex" "classes.dex"
 Add-Entry $apk (Resolve-Path data.json) "assets/data.json"
 foreach($f in Get-ChildItem icons\*.png){ Add-Entry $apk $f.FullName ("assets/icons/"+$f.Name) }
 foreach($f in Get-ChildItem gameicons\*.png){ Add-Entry $apk $f.FullName ("assets/gameicons/"+$f.Name) }
+foreach($f in Get-ChildItem ranks\*.png){ Add-Entry $apk $f.FullName ("assets/ranks/"+$f.Name) }
 $apk.Dispose()
 # verify: dex + forward-slash assets present
 $zc=[System.IO.Compression.ZipFile]::OpenRead((Resolve-Path "$OUT\app-unsigned.apk"))
 $hasDex=[bool]($zc.Entries | Where-Object FullName -eq 'classes.dex')
 $nIcons=($zc.Entries | Where-Object { $_.FullName -like 'assets/icons/*' }).Count
 $nGame=($zc.Entries | Where-Object { $_.FullName -like 'assets/gameicons/*' }).Count
+$nRank=($zc.Entries | Where-Object { $_.FullName -like 'assets/ranks/*' }).Count
 $zc.Dispose()
 if(-not $hasDex){ throw "classes.dex missing" }
 if($nIcons -ne 700){ throw "expected 700 icons, got $nIcons" }
 if($nGame -ne 7){ throw "expected 7 game icons, got $nGame" }
-Write-Host "assets OK: dex + $nIcons icons + $nGame game-arts (forward-slash)"
+if($nRank -ne 30){ throw "expected 30 rank emblems, got $nRank" }
+Write-Host "assets OK: dex + $nIcons icons + $nGame game-arts + $nRank rank-emblems (forward-slash)"
 
 # 4. align + sign
 & "$BT\zipalign.exe" -f 4 "$OUT\app-unsigned.apk" "$OUT\app-aligned.apk"

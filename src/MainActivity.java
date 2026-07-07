@@ -65,12 +65,24 @@ public class MainActivity extends Activity {
     static final int BG=0xFF0A0E13, BG2=0xFF0D1117, CARD=0xFF151C26, CARD2=0xFF1C2533, LINE=0xFF21303F;
     static final int CYAN=0xFF00B8E8, GREEN=0xFF39D353, GOLD=0xFFFFD54F, ORANGE=0xFFFF8A50, PURPLE=0xFFCE93D8;
     static final int T1=0xFFD6E2EE, T2=0xFF8B9AB0, T3=0xFF55677A;
-    static final String[][] RANKS={{"0","Recruit","🟫","Private at 10%"},{"10","Private","🔵","Corporal at 25%"},
-        {"25","Corporal","🟡","Sergeant at 40%"},{"40","Sergeant","🟠","Staff Sergeant at 55%"},
-        {"55","Staff Sergeant","🔴","Lieutenant at 65%"},{"65","Lieutenant","🟣","Captain at 75%"},
-        {"75","Captain","⚫","ODST at 85%"},{"85","ODST Operative","🪖","Spartan at 93%"},
-        {"93","Spartan","🟢","Noble Spartan at 99%"},{"99","Noble Spartan","🌟","Master Chief at 100%"},
-        {"100","Master Chief","🎖️","Collection complete!"}};
+    // v1.7.1 — the REAL Halo MCC rank ladder (Tour 1, 30 ranks Rookie→General), mapped to completion %.
+    // icon field "@mccNN" = bundled transparent emblem PNG at assets/ranks/mccNN.png (Halopedia-sourced).
+    static final String[][] RANKS={
+        {"0","Rookie","@mcc01","Recruit at 3%"},{"3","Recruit","@mcc02","Private at 6%"},
+        {"6","Private","@mcc03","Private Second Class at 10%"},{"10","Private Second Class","@mcc04","Private First Class at 13%"},
+        {"13","Private First Class","@mcc05","Lance Corporal at 17%"},{"17","Lance Corporal","@mcc06","Corporal at 20%"},
+        {"20","Corporal","@mcc07","Sergeant at 24%"},{"24","Sergeant","@mcc08","Sergeant Second Class at 27%"},
+        {"27","Sergeant Second Class","@mcc09","Sergeant First Class at 31%"},{"31","Sergeant First Class","@mcc10","Staff Sergeant at 34%"},
+        {"34","Staff Sergeant","@mcc11","Gunnery Sergeant at 37%"},{"37","Gunnery Sergeant","@mcc12","First Sergeant at 41%"},
+        {"41","First Sergeant","@mcc13","Sergeant Major at 44%"},{"44","Sergeant Major","@mcc14","Command Sergeant Major at 48%"},
+        {"48","Command Sergeant Major","@mcc15","Warrant Officer at 51%"},{"51","Warrant Officer","@mcc16","Warrant Officer Third Class at 55%"},
+        {"55","Warrant Officer Third Class","@mcc17","Warrant Officer Second Class at 58%"},{"58","Warrant Officer Second Class","@mcc18","Warrant Officer First Class at 62%"},
+        {"62","Warrant Officer First Class","@mcc19","Chief Warrant Officer at 65%"},{"65","Chief Warrant Officer","@mcc20","Second Lieutenant at 68%"},
+        {"68","Second Lieutenant","@mcc21","First Lieutenant at 72%"},{"72","First Lieutenant","@mcc22","Captain at 75%"},
+        {"75","Captain","@mcc23","Major at 79%"},{"79","Major","@mcc24","Lieutenant Colonel at 82%"},
+        {"82","Lieutenant Colonel","@mcc25","Colonel at 86%"},{"86","Colonel","@mcc26","Brigadier General at 89%"},
+        {"89","Brigadier General","@mcc27","Major General at 93%"},{"93","Major General","@mcc28","Lieutenant General at 96%"},
+        {"96","Lieutenant General","@mcc29","General at 100%"},{"100","General","@mcc30","Collection complete — the full 700!"}};
     // v1.2 — alternate rank ladders (choose your style)
     static final String[][] RANKS_H3={
         {"0","Recruit","🟫","Apprentice at 8%"},{"8","Apprentice","⬜","Private at 16%"},
@@ -271,7 +283,7 @@ public class MainActivity extends Activity {
         int rpct=rankPct(); String[] rk=rank(rpct);
         LinearLayout rc=card(); rc.setBackground(glow(CARD2,CARD,CYAN,9)); // v1.2.5 glow
         LinearLayout rrow=new LinearLayout(this); rrow.setOrientation(LinearLayout.HORIZONTAL); rrow.setGravity(Gravity.CENTER_VERTICAL);
-        TextView ic=text(rk[2],30,T1,false); ic.setPadding(0,0,dp(12),0); rrow.addView(ic);
+        rrow.addView(rankIcon(rk[2],42)); // v1.7.1 real MCC emblem (or emoji for H3/Reach styles)
         LinearLayout rcol=new LinearLayout(this); rcol.setOrientation(LinearLayout.VERTICAL); rcol.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
         rcol.addView(text("RANK · "+rankStyleName().toUpperCase()+" STYLE",9,T3,true));
         rcol.addView(text(rk[1],19,CYAN,true));
@@ -435,7 +447,7 @@ public class MainActivity extends Activity {
             LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
             row.setBackground(box(curr?CARD2:CARD, curr?CYAN:LINE, 6)); row.setPadding(dp(12),dp(10),dp(12),dp(10));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.topMargin=dp(6); row.setLayoutParams(lp);
-            TextView ic=text(r[2],22,reached?T1:T3,false); ic.setPadding(0,0,dp(12),0); row.addView(ic);
+            View ic=rankIcon(r[2],28); if(!reached) ic.setAlpha(0.35f); row.addView(ic); // v1.7.1 emblem, dimmed until reached
             LinearLayout c2=new LinearLayout(this); c2.setOrientation(LinearLayout.VERTICAL); c2.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
             c2.addView(text(r[1],14,reached?(curr?CYAN:GREEN):T2,curr));
             c2.addView(text("unlocks at "+rp+"%",9.5f,T3,false)); row.addView(c2);
@@ -636,6 +648,26 @@ public class MainActivity extends Activity {
             final android.graphics.Bitmap bm=android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath(),o2);
             if(bm!=null) runOnUiThread(new Runnable(){ public void run(){ if(memCache.size()>120) memCache.clear(); memCache.put("full:"+url,bm); iv.setImageBitmap(bm); } });
         }catch(Exception e){} } }); }
+
+    /* ===== v1.7.1 rank emblems — render "@mccNN" as a bundled transparent PNG, else emoji ===== */
+    // Returns an ImageView (emblem) or TextView (emoji) sized to szDp, for use as a rank icon.
+    View rankIcon(String icon, int szDp){
+        if(icon!=null && icon.startsWith("@")){
+            final android.widget.ImageView iv=new android.widget.ImageView(this);
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(szDp),dp(szDp)); lp.rightMargin=dp(10); iv.setLayoutParams(lp);
+            iv.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+            final String asset="ranks/"+icon.substring(1)+".png", key="r:"+icon;
+            android.graphics.Bitmap c=memCache.get(key);
+            if(c!=null) iv.setImageBitmap(c);
+            else POOL.execute(new Runnable(){ public void run(){ try{
+                java.io.InputStream in=getAssets().open(asset);
+                final android.graphics.Bitmap bm=android.graphics.BitmapFactory.decodeStream(in); in.close();
+                if(bm!=null) runOnUiThread(new Runnable(){ public void run(){ memCache.put(key,bm); iv.setImageBitmap(bm); } });
+            }catch(Exception e){} } });
+            return iv;
+        }
+        TextView t=text(icon,szDp*0.75f,T1,false); t.setPadding(0,0,dp(12),0); return t;
+    }
 
     /* ===== v1.6.1 real game art (assets/gameicons/<gid>.png, official box art) ===== */
     void loadGameIcon(final String gid, final android.widget.ImageView iv){
@@ -938,6 +970,7 @@ public class MainActivity extends Activity {
             {"1","v1.6.1","Real game box art on the home grid · tolerant sync name-matching + auto-sync on launch · 690-era sync leftovers auto-migrated (703/7035 → clean 700/7000)"},
             {"1","v1.6.2","THE sync fix — Xbox Live pages results 150 at a time and the app only ever read page 1 (why +0 past 150 unlocks); now walks all pages. Verified live: 458/458 unlocks, 3,895G, every Xbox name matches the DB 1:1"},
             {"1","v1.7","OPERATION PLAN tab — a live route to 100% (phases stack: free G → sweeps → par runs → specials → Legendary → LASO order → MP → passive) · per-achievement TIPS · 47 web-verified skull mission-tags · real game box art on the game chips"},
+            {"1","v1.7.1","Real Halo MCC rank ladder — the actual 30 Tour-1 ranks (Rookie → General) with official transparent emblem art, replacing the emoji tiers · MCC rank style now art-driven"},
             {"0","v1.6.5","Home-screen widgets"},
             {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
             {"0","v1.8","Walkthroughs · solution videos · screenshots"},
@@ -952,7 +985,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.7.0 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.7.1 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
