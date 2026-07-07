@@ -101,7 +101,7 @@ public class MainActivity extends Activity {
     String tab="home", curGame="ce", fStatus="ALL", fType="all", query="", fMission="", fSort="default"; // v1.6 fSort
     long sessionBase=0; int sessionChecks=0;
     LinearLayout root, content; AchAdapter adapter;
-    TextView[] navBtns=new TextView[4];
+    TextView[] navBtns=new TextView[5]; // v1.7 +PLAN
 
     @Override protected void onCreate(Bundle b){
         super.onCreate(b);
@@ -232,9 +232,9 @@ public class MainActivity extends Activity {
     View buildNav(){
         LinearLayout nav=new LinearLayout(this); nav.setOrientation(LinearLayout.HORIZONTAL);
         nav.setBackgroundColor(BG2); nav.setPadding(0,dp(6),0,dp(8));
-        String[][] items={{"home","⛨","HOME"},{"games","🗂","GAMES"},{"pins","📌","PINS"},{"more","⚙","MORE"}};
-        for(int i=0;i<4;i++){ final String id=items[i][0];
-            TextView t=text(items[i][1]+"\n"+items[i][2],11,T3,true);
+        String[][] items={{"home","⛨","HOME"},{"games","🗂","GAMES"},{"plan","🎯","PLAN"},{"pins","📌","PINS"},{"more","⚙","MORE"}};
+        for(int i=0;i<items.length;i++){ final String id=items[i][0];
+            TextView t=text(items[i][1]+"\n"+items[i][2],10.5f,T3,true);
             t.setGravity(Gravity.CENTER); t.setLineSpacing(0,1.1f);
             t.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
             t.setPadding(0,dp(6),0,dp(4)); navBtns[i]=t;
@@ -242,8 +242,8 @@ public class MainActivity extends Activity {
             nav.addView(t); }
         return nav;
     }
-    void restyleNav(){ String[] ids={"home","games","pins","more"};
-        for(int i=0;i<4;i++) navBtns[i].setTextColor(ids[i].equals(tab)?CYAN:T3); }
+    void restyleNav(){ String[] ids={"home","games","plan","pins","more"};
+        for(int i=0;i<navBtns.length;i++) navBtns[i].setTextColor(ids[i].equals(tab)?CYAN:T3); }
 
     void show(String t){ tab=t; restyleNav();
         if(sessionMin()>=45) unlockMeta("egg_endure");
@@ -251,6 +251,7 @@ public class MainActivity extends Activity {
         content.removeAllViews();
         if(t.equals("home")) content.addView(buildHome());
         else if(t.equals("games")) content.addView(buildGames());
+        else if(t.equals("plan")) content.addView(buildPlan());
         else if(t.equals("pins")) content.addView(buildPins());
         else content.addView(buildMore());
         content.setAlpha(0f); content.animate().alpha(1f).setDuration(220).start(); } // v1.4 screen transition
@@ -453,9 +454,14 @@ public class MainActivity extends Activity {
         for(Map.Entry<String,JSONObject> e:games.entrySet()){
             final String gid=e.getKey(); int[] c=count(gid); if(c[0]==0) continue;
             boolean on=gid.equals(curGame);
-            TextView ch=text(gameIcon(gid)+" "+e.getValue().optString("name").replace("Halo: ","").replace("Halo ","H")+" "+(100*c[1]/c[0])+"%",12,on?CYAN:T2,on);
-            ch.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,16)); ch.setPadding(dp(14),dp(8),dp(14),dp(8));
+            LinearLayout ch=new LinearLayout(this); ch.setOrientation(LinearLayout.HORIZONTAL); ch.setGravity(Gravity.CENTER_VERTICAL);
+            ch.setBackground(box(on?CARD2:CARD,on?CYAN:LINE,16)); ch.setPadding(dp(8),dp(6),dp(13),dp(6));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,-2); lp.rightMargin=dp(7); ch.setLayoutParams(lp);
+            android.widget.ImageView ga=new android.widget.ImageView(this); // v1.7 real box art on chips
+            LinearLayout.LayoutParams galp=new LinearLayout.LayoutParams(dp(22),dp(22)); galp.rightMargin=dp(8); ga.setLayoutParams(galp);
+            ga.setBackground(box(BG2,LINE,5)); ga.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP); ga.setClipToOutline(true);
+            loadGameIcon(gid,ga); ch.addView(ga);
+            ch.addView(text(e.getValue().optString("name").replace("Halo: ","").replace("Halo ","H")+" "+(100*c[1]/c[0])+"%",12,on?CYAN:T2,on));
             ch.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ if(gid.equals(chipLast)){ if(++chipTaps>=7) unlockMeta("egg_madrigal"); } else { chipLast=gid; chipTaps=1; } curGame=gid; fMission=""; visitGame(gid); show("games"); } });
             chips.addView(ch); }
         col.addView(hs);
@@ -568,7 +574,7 @@ public class MainActivity extends Activity {
             +(unlockTimes.containsKey(aid)?"\n🕒 Unlocked: "+fmtDate(unlockTimes.get(aid)):"");
         new AlertDialog.Builder(this)
             .setTitle(o.optString("icon")+" "+o.optString("name")+" · "+o.optInt("gs")+"G")
-            .setMessage(o.optString("desc")+"\n\n📖 GUIDE\n"+o.optString("guide","No guide yet.")+"\n\n"+extra)
+            .setMessage(o.optString("desc")+"\n\n📖 GUIDE\n"+o.optString("guide","No guide yet.")+"\n\n💡 TIP\n"+tipFor(o)+"\n\n"+extra)
             .setNeutralButton("ART & GUIDES ▸",new android.content.DialogInterface.OnClickListener(){
                 public void onClick(android.content.DialogInterface d,int w){
                     final String[] opts={"🖼 View full artwork","📚 Halopedia page","🏆 TrueAchievements","▶️ YouTube solutions"};
@@ -642,6 +648,96 @@ public class MainActivity extends Activity {
         }catch(Exception e){} } });
     }
     void visitGame(String gid){ visitedGames.add(gid); saveCsv(visitedGames,"vgames"); int g=0; for(java.util.Map.Entry<String,JSONObject> e:games.entrySet()){ int[] c=count(e.getKey()); if(c[0]>0) g++; } if(visitedGames.size()>=g) unlockMeta("egg_library"); }
+
+    /* ===== v1.7 OPERATION PLAN — live completion-route engine ===== */
+    // Bucket an undone achievement into a route phase. Stacking-aware: one run clears many.
+    String routePhase(JSONObject o){
+        String ty=o.optString("type","").toLowerCase(); String ds=o.optString("desc","").toLowerCase();
+        if(estHrs(o)<=0.2 || ds.contains("listen to")||ds.contains("look at")||ds.contains("hidden music")||ds.contains("15th of any month")||ds.contains("words of wisdom")) return "0 · Free tonight";
+        if(ty.contains("skull")||ty.contains("terminal")||ty.contains("collectible")) return "1 · Collectible sweeps (Easy)";
+        if(ty.contains("speed")||ds.contains("par time")||ds.contains("par score")) return "2 · Par time + score runs";
+        if(ty.contains("laso")) return "5 · LASO (the mountain)";
+        if(ty.contains("legendary")||ds.contains("legendary")) return "4 · Legendary runs";
+        if(ty.contains("multiplayer")||ty.contains("firefight")||ty.contains("spartan_ops")) return "6 · Multiplayer / Firefight";
+        if(ds.matches(".*(kill \\d|collect \\d|earn a total|complete \\d+ (missions|multiplayer)).*")) return "7 · Passive grinds (auto)";
+        return "3 · Campaign specials";
+    }
+    static final String[] PHASE_ORDER={"0 · Free tonight","1 · Collectible sweeps (Easy)","2 · Par time + score runs","3 · Campaign specials","4 · Legendary runs","5 · LASO (the mountain)","6 · Multiplayer / Firefight","7 · Passive grinds (auto)"};
+    View buildPlan(){
+        ScrollView sv=new ScrollView(this);
+        LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
+        col.setPadding(dp(14),dp(16),dp(14),dp(24)); sv.addView(col);
+        col.addView(text("🎯 OPERATION PLAN",20,CYAN,true));
+        col.addView(text("your live route to 100% — phases stack, top to bottom",9.5f,T3,false));
+        col.addView(rule(CYAN));
+        int[] t=count(null);
+        java.util.LinkedHashMap<String,int[]> ph=new java.util.LinkedHashMap<String,int[]>();
+        for(String p:PHASE_ORDER) ph.put(p,new int[]{0,0});
+        java.util.List<JSONObject> todo=new java.util.ArrayList<JSONObject>();
+        for(JSONObject o:all){ if(done.contains(o.optString("id"))) continue; todo.add(o);
+            int[] c=ph.get(routePhase(o)); if(c!=null){ c[0]++; c[1]+=o.optInt("gs"); } }
+        LinearLayout hc=glowCard(GOLD);
+        hc.addView(text("REMAINING",9,T3,true));
+        hc.addView(text((t[0]-t[1])+" achievements · "+(t[2]-t[3])+"G to go",16,GOLD,true));
+        hc.addView(text("you're at "+t[1]+"/"+t[0]+" ("+(t[0]==0?0:100*t[1]/t[0])+"%) · "+t[3]+"/"+t[2]+"G",10.5f,T2,false));
+        col.addView(hc);
+        if(todo.isEmpty()){ LinearLayout dc=glowCard(GREEN); dc.addView(text("🎖️ 100% — Collection complete.",15,GREEN,true)); dc.addView(text("Were it so easy.",10,T2,false)); col.addView(dc); return sv; }
+        for(String p:PHASE_ORDER){ int[] c=ph.get(p); if(c[0]==0) continue;
+            final String phase=p;
+            LinearLayout pc=card();
+            LinearLayout hr=new LinearLayout(this); hr.setOrientation(LinearLayout.HORIZONTAL); hr.setGravity(Gravity.CENTER_VERTICAL);
+            TextView nm=text("PHASE "+p,11,CYAN,true); nm.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); hr.addView(nm);
+            hr.addView(text(c[0]+" · "+c[1]+"G",11,GOLD,true)); pc.addView(hr);
+            pc.addView(text(phaseHint(p),9,T3,false));
+            // top 4 targets in this phase, best G/hr first
+            java.util.List<JSONObject> ip=new java.util.ArrayList<JSONObject>();
+            for(JSONObject o:todo) if(routePhase(o).equals(phase)) ip.add(o);
+            java.util.Collections.sort(ip,new java.util.Comparator<JSONObject>(){ public int compare(JSONObject a,JSONObject b){ double va=Math.max(a.optInt("gs"),5)/Math.max(estHrs(a),0.2), vb=Math.max(b.optInt("gs"),5)/Math.max(estHrs(b),0.2); return va>vb?-1:(va<vb?1:0); } });
+            int show=Math.min(4,ip.size());
+            for(int i=0;i<show;i++){ final JSONObject o=ip.get(i);
+                LinearLayout r=new LinearLayout(this); r.setOrientation(LinearLayout.HORIZONTAL); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(0,dp(5),0,dp(5));
+                TextView ic=text(o.optString("icon","🎯"),15,T1,false); ic.setPadding(0,0,dp(9),0); r.addView(ic);
+                LinearLayout cc=new LinearLayout(this); cc.setOrientation(LinearLayout.VERTICAL); cc.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));
+                cc.addView(text(o.optString("name"),12,T1,true));
+                String gm=gameName(o.optString("game")).replace("Halo: ","").replace("Halo ","H"); String ms=o.optString("mission","");
+                cc.addView(text(gm+(ms.length()>0?" · "+ms:"")+" · "+o.optInt("gs")+"G",9,T2,false)); r.addView(cc);
+                r.addView(text("▸",13,CYAN,true));
+                r.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ showDetail(null,o); } });
+                pc.addView(r); }
+            if(ip.size()>show) pc.addView(text("+ "+(ip.size()-show)+" more — filter this type in GAMES",9,T3,false));
+            col.addView(pc); }
+        LinearLayout lc=card();
+        lc.addView(text("🧗 LASO ORDER (easiest → hardest)",9.5f,PURPLE,true));
+        lc.addView(text("Reach → CE → Halo 4 → ODST → Halo 3 → Halo 2. Do H2 last, always. In CE, the Bandana skull gives infinite ammo — a huge LASO help.",9.5f,T2,false));
+        col.addView(lc);
+        return sv;
+    }
+    String phaseHint(String p){
+        if(p.startsWith("0")) return "one-tap dialogue/date unlocks — grab these now";
+        if(p.startsWith("1")) return "one Easy pass per game with a guide open; skulls + terminals";
+        if(p.startsWith("2")) return "stack par-time AND par-score in the SAME run (Easy, scoring on)";
+        if(p.startsWith("3")) return "mission-specific feats — batch by mission via the 🎯 filter";
+        if(p.startsWith("4")) return "one Legendary pass per game, stacking mission-completes + challenges";
+        if(p.startsWith("5")) return "Legendary All Skulls On — the endgame; see order below";
+        if(p.startsWith("6")) return "custom games with a 2nd controller, or playlist nights";
+        return "cumulative — these fill themselves while you do the rest; never farm directly";
+    }
+
+    /* ===== v1.7 tips layer ===== */
+    String tipFor(JSONObject o){
+        String ty=o.optString("type","").toLowerCase(); String g=o.optString("game","");
+        String ds=o.optString("desc","").toLowerCase();
+        if(ty.contains("laso")) return "LASO = Legendary + every skull. Bring patience and a checkpoint-farming mindset; the Bandana skull (CE) grants infinite ammo. Reach/CE are the friendliest to start.";
+        if(ty.contains("skull")) return "Skulls respawn every replay in MCC — no need to keep them. Grab on Easy solo with a location guide; check this achievement's mission tag above.";
+        if(ty.contains("terminal")) return "Terminals are static pickups — do a dedicated collectible run on Easy; a video guide per mission is fastest.";
+        if(ty.contains("speed")||ds.contains("par time")) return "Par times assume a known route. Play on Easy, skip fights where possible, and stack the par-SCORE run in the same playthrough (scoring on).";
+        if(ds.contains("par score")) return "Par score rewards kills + multipliers. Enable scoring, chain kills for medals, and run it alongside the par-time attempt.";
+        if(ty.contains("legendary")||ds.contains("legendary")) return "Co-op makes Legendary far easier (revives). Stack any 'on Legendary' feats + mission completions into one careful run.";
+        if(ty.contains("multiplayer")) return "Most MP medal/win counts accrue over normal play; a second controller in a custom game can farm specific medals safely.";
+        if(ty.contains("firefight")) return "Firefight: pick a high-yield set, use a generous custom ruleset where allowed, and let cumulative counts build across sessions.";
+        if(ds.matches(".*kill \\d.*")||ds.contains("earn a total")||ds.contains("collect ")) return "This is cumulative — it'll complete on its own as you play. Don't grind it directly; just keep progressing other phases.";
+        return "Batch this with other objectives in the same mission — check the 🎯 mission filter in GAMES to see everything you can clear in one run.";
+    }
 
     /* ===== PINS ===== */
     View buildPins(){
@@ -841,6 +937,7 @@ public class MainActivity extends Activity {
             {"1","v1.6","Premium pass — all 700 icons bundled offline (instant, zero network) · global search across every game · sort modes (Top G / Quickest / A–Z) · live filter counts · 2-up home grid"},
             {"1","v1.6.1","Real game box art on the home grid · tolerant sync name-matching + auto-sync on launch · 690-era sync leftovers auto-migrated (703/7035 → clean 700/7000)"},
             {"1","v1.6.2","THE sync fix — Xbox Live pages results 150 at a time and the app only ever read page 1 (why +0 past 150 unlocks); now walks all pages. Verified live: 458/458 unlocks, 3,895G, every Xbox name matches the DB 1:1"},
+            {"1","v1.7","OPERATION PLAN tab — a live route to 100% (phases stack: free G → sweeps → par runs → specials → Legendary → LASO order → MP → passive) · per-achievement TIPS · 47 web-verified skull mission-tags · real game box art on the game chips"},
             {"0","v1.6.5","Home-screen widgets"},
             {"0","v1.7","General tips & pointers (YouTube/Halopedia/TA)"},
             {"0","v1.8","Walkthroughs · solution videos · screenshots"},
@@ -855,7 +952,7 @@ public class MainActivity extends Activity {
         rm.addView(text("submit ideas via the companion app — they get built into future versions",8.5f,T3,false));
         col.addView(rm);
 
-        TextView ab=text("\nUNSC TERMINAL v1.6.2 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
+        TextView ab=text("\nUNSC TERMINAL v1.7.0 · native\n© 2026 Parliament Four · for personal glory",9,T3,false);
         ab.setGravity(Gravity.CENTER); col.addView(ab);
         return sv;
     }
