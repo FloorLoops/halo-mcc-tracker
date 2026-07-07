@@ -5,7 +5,7 @@
 
 *Every achievement. Every game. One terminal.*
 
-![version](https://img.shields.io/badge/version-1.6-5c8a3a?style=for-the-badge)
+![version](https://img.shields.io/badge/version-1.7.0-5c8a3a?style=for-the-badge)
 ![platform](https://img.shields.io/badge/Android%20·%20native-2d5a87?style=for-the-badge)
 ![database](https://img.shields.io/badge/database-700%20·%207000G-d4a017?style=for-the-badge)
 ![sync](https://img.shields.io/badge/Xbox%20Live-sync-107c10?style=for-the-badge)
@@ -41,7 +41,7 @@
 
 | Channel | What you get |
 |---|---|
-| [**Releases**](../../releases) | `UNSCTerminal-v1.6-FREE.apk` — native Android app (sideload) |
+| [**Releases**](../../releases) | `UNSCTerminal-v1.7.0-FREE.apk` — native Android app (sideload) |
 | [**Web**](https://floorloops.github.io/halo-mcc-tracker/) | Browser version — desktop-friendly, same database lineage |
 | `src/` | Full source — single-file Java, zero dependencies, no-Gradle build |
 
@@ -61,10 +61,9 @@
 | **v1.4** | Mutable UNSC-style SFX (check tick + unlock fanfare) · screen transitions & animations | ✅ shipped |
 | **v1.5** | Mission-complete chime when you 100% a game · SFX/chime mute toggles · polish | ✅ shipped |
 | **v1.6** | **Premium pass** — all 700 icons **bundled in the APK** (instant, fully offline) · **global search** across every game · **sort modes** (Top G / Quickest / A–Z) · live filter counts · 2-up home game grid | ✅ shipped |
+| **v1.7** | **OPERATION PLAN** — live phased route to 100% (stacking-aware) · **per-achievement tips** · 47 web-verified skull mission-tags · **real game box art on the game chips** · in-app completion-order + LASO routing folded in early | ✅ shipped |
 | **v1.6.5** | Home-screen widgets | planned |
-| **v1.7** | General tips & pointers blended from YouTube / Halopedia / TrueAchievements | planned |
 | **v1.8** | Per-achievement written walkthroughs · solution videos · path/collectible screenshots | planned |
-| **v1.9** | Optimal completion-order engine + least-pain LASO routing | planned |
 | **v2.0** | Generic **"100% Checklist"** edition for Google Play (original branding & assets) | planned |
 
 ## 🏗️ Building
